@@ -56,7 +56,7 @@ export default function FundingPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#060913] text-[#f8fafc] py-12 px-6 bg-grid-pattern">
+    <div className="relative min-h-screen bg-[var(--background)] text-[#f8fafc] py-12 px-6 bg-grid-pattern">
       <div className="max-w-7xl mx-auto">
         
         {/* Banner Section */}

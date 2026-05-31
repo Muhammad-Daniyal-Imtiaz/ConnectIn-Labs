@@ -42,8 +42,13 @@ export default function IndividualInvestorsPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#060913] text-[#f8fafc] py-12 px-6 bg-grid-pattern">
-      <div className="max-w-7xl mx-auto">
+    <div className="relative min-h-screen bg-[var(--background)] text-[#f8fafc] py-12 px-6 bg-grid-pattern overflow-hidden">
+      {/* Patriotic Tech Background Glowing Orbs */}
+      <div className="absolute top-[-10%] left-[-15%] w-[60%] h-[60%] rounded-full bg-[#00a86b]/6 blur-[140px] pointer-events-none animate-pulse-glow"></div>
+      <div className="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-[#2563eb]/5 blur-[140px] pointer-events-none"></div>
+      <div className="absolute top-[20%] left-[30%] w-[40%] h-[40%] rounded-full bg-white/2 blur-[150px] pointer-events-none"></div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
 
         {/* Banner Section */}
         <div className="mb-12">

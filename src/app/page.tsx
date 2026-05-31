@@ -64,10 +64,11 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-[#060913] text-[#f8fafc] overflow-hidden bg-grid-pattern">
-      {/* Background Glowing Effects */}
-      <div className="absolute top-[-10%] left-[-15%] w-[60%] h-[60%] rounded-full bg-emerald-500/5 blur-[130px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-15%] w-[60%] h-[60%] rounded-full bg-amber-500/5 blur-[130px] pointer-events-none"></div>
+    <div className="relative min-h-screen bg-[var(--background)] text-[#f8fafc] overflow-hidden bg-grid-pattern">
+      {/* Patriotic Tech Background Glowing Orbs */}
+      <div className="absolute top-[-10%] left-[-15%] w-[60%] h-[60%] rounded-full bg-[#00a86b]/8 blur-[140px] pointer-events-none animate-pulse-glow"></div>
+      <div className="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-[#2563eb]/6 blur-[140px] pointer-events-none"></div>
+      <div className="absolute top-[20%] left-[30%] w-[40%] h-[40%] rounded-full bg-white/2 blur-[150px] pointer-events-none"></div>
 
       {/* Hero section */}
       <section className="relative pt-20 pb-16 px-6 max-w-7xl mx-auto text-center">

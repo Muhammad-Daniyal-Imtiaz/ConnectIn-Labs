@@ -50,7 +50,7 @@ export default function Header() {
     <header 
       className={`sticky top-0 z-50 w-full transition-all duration-300 border-b ${
         isScrolled 
-          ? "bg-[#060913]/90 backdrop-blur-md border-white/10 shadow-lg shadow-[#060913]/20" 
+          ? "bg-[var(--background)]/90 backdrop-blur-md border-white/10 shadow-lg shadow-[var(--background)]/20" 
           : "bg-transparent border-white/5"
       }`}
     >
@@ -273,7 +273,7 @@ export default function Header() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-white/5 bg-[#060913] px-6 py-6 space-y-6"
+            className="md:hidden border-t border-white/5 bg-[var(--background)] px-6 py-6 space-y-6"
           >
             <div className="space-y-4">
               <Link 
