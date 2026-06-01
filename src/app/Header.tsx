@@ -149,6 +149,19 @@ export default function Header() {
                   <div className="text-[10px] font-extrabold text-slate-500 px-3.5 py-1 uppercase tracking-widest font-mono">Talent & Builders</div>
                   
                   <Link 
+                    href="/feed" 
+                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 transition-all group"
+                  >
+                    <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white">Foundry Feed</p>
+                      <p className="text-[9.5px] text-slate-400 font-medium">Live updates & ideas stream</p>
+                    </div>
+                  </Link>
+                  
+                  <Link 
                     href="/teams" 
                     className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 transition-all group"
                   >
@@ -413,6 +426,7 @@ export default function Header() {
               <div className="space-y-2">
                 <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest font-mono">Forging Modules</p>
                 <div className="grid grid-cols-2 gap-2 pl-2">
+                  <Link href="/feed" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Feed</Link>
                   <Link href="/teams" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-emerald-400" /> Teams</Link>
                   <Link href="/jobs" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5 text-teal-400" /> Jobs</Link>
                   <Link href="/freelance" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5 text-emerald-400" /> Freelance</Link>

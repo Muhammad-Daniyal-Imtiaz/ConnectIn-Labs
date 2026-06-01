@@ -17,6 +17,8 @@ import {
   ArrowRight,
   AlertCircle,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Image as ImageIcon,
   Upload,
   MessageSquare,
@@ -26,6 +28,7 @@ import {
   Trash2
 } from "lucide-react";
 
+import FeedPostCard from "@/components/FeedPostCard";
 import { buildersData, Builder, startupCategories, allFlatCategories } from "../data";
 
 export default function TeamsPage() {
@@ -752,68 +755,9 @@ export default function TeamsPage() {
                   <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">Be the first to list an idea or MVP on the feed!</p>
                 </div>
               ) : (
-                postsList.map((post) => {
-                  let imgs: string[] = [];
-                  try {
-                    imgs = JSON.parse(post.imagesJson || "[]");
-                  } catch (e) {}
-
-                  return (
-                    <motion.div
-                      key={post.id}
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-[#0c111d] border border-white/5 hover:border-white/10 rounded-2xl p-5 transition-all relative overflow-hidden group"
-                    >
-                      <div className="flex items-start gap-4 mb-4">
-                        <img
-                          src={post.userAvatar}
-                          alt={post.userName}
-                          className="w-10 h-10 rounded-xl border border-white/10 object-cover"
-                        />
-                        <div className="flex-1">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div>
-                              <h4 className="font-extrabold text-xs text-white tracking-wide">{post.userName}</h4>
-                              <p className="text-[9.5px] font-bold text-slate-500 uppercase tracking-tight">{post.userRole}</p>
-                            </div>
-                            <span className="inline-flex items-center gap-1 text-[9px] font-black px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">
-                              {post.category}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <h3 className="font-extrabold text-sm text-white mb-2 uppercase tracking-wide group-hover:text-emerald-400 transition-all">
-                        {post.title}
-                      </h3>
-                      <p className="text-[11.5px] text-slate-300 leading-relaxed font-medium whitespace-pre-line mb-4">
-                        {post.content}
-                      </p>
-
-                      {/* Post Images Grid */}
-                      {imgs.length > 0 && (
-                        <div className={`grid gap-3.5 mb-4 ${imgs.length === 1 ? "grid-cols-1" : imgs.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
-                          {imgs.map((src, i) => (
-                            <div key={i} className="relative rounded-xl overflow-hidden border border-white/5 bg-slate-950 h-36">
-                              <img src={src} alt="Uploaded post attachment" className="w-full h-full object-cover" />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between text-[9.5px] text-slate-500 font-bold uppercase tracking-wider font-mono pt-3.5 border-t border-white/5">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                        </span>
-                        <span className="text-[9px] text-[#00a86b]/70 font-mono tracking-widest font-black uppercase">
-                          HEC Sandbox Sync
-                        </span>
-                      </div>
-                    </motion.div>
-                  );
-                })
+                postsList.map((post) => (
+                  <FeedPostCard key={post.id} post={post} />
+                ))
               )}
             </div>
           </div>
