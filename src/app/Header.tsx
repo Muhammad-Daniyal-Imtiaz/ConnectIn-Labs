@@ -320,6 +320,12 @@ export default function Header() {
               >
                 <span>Profile</span>
               </Link>
+              <Link
+                href="/myposts"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 font-mono text-[10px] font-bold border border-white/10 hover:bg-slate-700 hover:text-white transition-all cursor-pointer"
+              >
+                <span>My Posts</span>
+              </Link>
               
               {/* Custom User Info and Sign Out */}
               <div className="flex items-center gap-3 relative shrink-0">
@@ -382,6 +388,7 @@ export default function Header() {
                   <Link href="/freelance" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5 text-emerald-400" /> Freelance</Link>
                   <Link href="/challenges" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Trophy className="w-3.5 h-3.5 text-rose-400" /> Challenges</Link>
                   <Link href="/mvps" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><ShoppingBag className="w-3.5 h-3.5 text-indigo-400" /> MVPs</Link>
+                  {isSignedIn && <Link href="/myposts" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"><Layers className="w-3.5 h-3.5 text-emerald-400" /> My Posts</Link>}
                 </div>
               </div>
 

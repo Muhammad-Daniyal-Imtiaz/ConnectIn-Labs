@@ -72,11 +72,19 @@ export const mvps = sqliteTable(
     userRole: text("user_role").notNull(),
     userAvatar: text("user_avatar").notNull(),
     title: text("title").notNull(), // MVP Name
-    description: text("description").notNull(), // Pitch / details
-    demoUrl: text("demo_url"), // Optional URL to live demo
-    techStack: text("tech_stack").notNull(), // Comma-separated or free text, e.g. "Next.js, Tailwind, SQLite"
-    category: text("category").notNull(), // 'AI' | 'SaaS' | 'Fintech' | 'Edtech' | 'Healthtech' | 'Deep Tech' | 'Hardware'
-    imagesJson: text("images_json").notNull().default("[]"), // Up to 3 base64 strings serialized as JSON
+    tagline: text("tagline").notNull(), // One-line Pitch
+    category: text("category").notNull(), // e.g. 'SaaS MVPs', 'AI tools', etc.
+    reason: text("reason").notNull(), // Reason for Sale
+    askingPrice: text("asking_price").notNull(),
+    revenue: text("revenue").notNull(), // Monthly Revenue
+    users: text("users").notNull(), // Traction / Users
+    githubRepo: text("github_repo"), // Verified GitHub Repository (optional)
+    techStack: text("tech_stack").notNull(), // Comma-separated
+    productDescription: text("product_description").notNull(), // Product Description
+    repoVerified: integer("repo_verified", { mode: "boolean" }).default(false),
+    ownershipVerified: integer("ownership_verified", { mode: "boolean" }).default(true),
+    githubStars: integer("github_stars").default(0),
+    screenshot: text("screenshot"),
     ...timestamps,
   },
   (t) => ({})

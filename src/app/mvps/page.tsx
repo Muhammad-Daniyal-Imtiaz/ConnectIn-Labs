@@ -2,26 +2,20 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  Building2,
   Sparkles,
   Search,
-  Coins,
   ArrowRight,
   CheckCircle2,
-  ExternalLink,
   GitBranch,
-  DollarSign,
   TrendingUp,
-  Eye,
   ShieldCheck,
   Plus,
   X,
-  Terminal,
   Activity,
-  Layers,
   Laptop
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getMvps, createMvp } from "@/app/actions/mvps";
 
 interface MVP {
   id: string;
@@ -36,8 +30,13 @@ interface MVP {
   repoVerified: boolean;
   ownershipVerified: boolean;
   githubStars: number;
-  screenshot: string;
-  description: string;
+  screenshot?: string | null;
+  productDescription: string;
+  userId: string;
+  userName: string;
+  userRole: string;
+  userAvatar: string;
+  githubRepo?: string | null;
 }
 
 const initialMVPs: MVP[] = [
@@ -54,8 +53,13 @@ const initialMVPs: MVP[] = [
     repoVerified: true,
     ownershipVerified: true,
     githubStars: 84,
-    screenshot: "https://images.unsplash.com/photo-1625246373972-1033cd00cd69?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-    description: "Fully working model analyzing cotton crop yields from satellite images. Built over 6 months, but cofounders got remote jobs."
+    screenshot: "https://images.unsplash.com/photo-1625246373972-1033cd00cd6c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+    productDescription: "Fully working model analyzing cotton crop yields from satellite images. Built over 6 months, but cofounders got remote jobs.",
+    userId: "demo",
+    userName: "Demo User",
+    userRole: "Founder",
+    userAvatar: "",
+    githubRepo: ""
   },
   {
     id: "mvp-2",
@@ -71,7 +75,12 @@ const initialMVPs: MVP[] = [
     ownershipVerified: true,
     githubStars: 142,
     screenshot: "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-    description: "Viral extension with steady downloads. Intended to build a paid tier but pivot to semiconductor hardware design."
+    productDescription: "Viral extension with steady downloads. Intended to build a paid tier but pivot to semiconductor hardware design.",
+    userId: "demo",
+    userName: "Demo User",
+    userRole: "Founder",
+    userAvatar: "",
+    githubRepo: ""
   },
   {
     id: "mvp-3",
@@ -87,7 +96,12 @@ const initialMVPs: MVP[] = [
     ownershipVerified: true,
     githubStars: 0,
     screenshot: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-    description: "Generating real retail revenue. Need capital or a technical cofounder to take over sales or scale the mobile framework."
+    productDescription: "Generating real retail revenue. Need capital or a technical cofounder to take over sales or scale the mobile framework.",
+    userId: "demo",
+    userName: "Demo User",
+    userRole: "Founder",
+    userAvatar: "",
+    githubRepo: ""
   },
   {
     id: "mvp-4",
@@ -103,16 +117,22 @@ const initialMVPs: MVP[] = [
     ownershipVerified: true,
     githubStars: 56,
     screenshot: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-    description: "Used internally by two PITB-incubated startups. Beautiful UI but requires focus that we cannot commit due to university thesis."
+    productDescription: "Used internally by two PITB-incubated startups. Beautiful UI but requires focus that we cannot commit due to university thesis.",
+    userId: "demo",
+    userName: "Demo User",
+    userRole: "Founder",
+    userAvatar: "",
+    githubRepo: ""
   }
 ];
 
 export default function MVPMarketplace() {
-  const [mvps, setMvps] = useState<MVP[]>(initialMVPs);
+  const [mvps, setMvps] = useState<MVP[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedReason, setSelectedReason] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [inquireMvp, setInquireMvp] = useState<MVP | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Listing Modal State
   const [showListModal, setShowListModal] = useState(false);
@@ -126,6 +146,7 @@ export default function MVPMarketplace() {
   const [newTech, setNewTech] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [repoLink, setRepoLink] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const [inquiryName, setInquiryName] = useState("");
   const [inquiryEmail, setInquiryEmail] = useState("");
@@ -154,39 +175,65 @@ export default function MVPMarketplace() {
     "wants to raise instead of sell"
   ];
 
-  const handleListMvp = (e: React.FormEvent) => {
+  // Fetch MVPs from DB on mount
+  useEffect(() => {
+    const fetchMvps = async () => {
+      try {
+        const result = await getMvps();
+        if (result.success && result.mvps && result.mvps.length > 0) {
+          setMvps(result.mvps as MVP[]);
+        } else {
+          setMvps(initialMVPs);
+        }
+      } catch (e) {
+        console.error("Failed to fetch MVPs:", e);
+        setMvps(initialMVPs);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMvps();
+  }, []);
+
+  const handleListMvp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle || !newTagline) return;
 
-    const newItem: MVP = {
-      id: `mvp-${Date.now()}`,
-      title: newTitle,
-      tagline: newTagline,
-      category: newCategory,
-      reason: newReason,
-      askingPrice: newPrice || "Open for Offers",
-      revenue: newRevenue || "$0/mo",
-      users: newUsers || "Prototype stage",
-      techStack: newTech.split(",").map(t => t.trim()).filter(Boolean),
-      repoVerified: !!repoLink,
-      ownershipVerified: true,
-      githubStars: repoLink ? Math.floor(Math.random() * 20) : 0,
-      screenshot: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      description: newDesc || "No description provided."
-    };
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("title", newTitle);
+      formData.append("tagline", newTagline);
+      formData.append("category", newCategory);
+      formData.append("reason", newReason);
+      formData.append("askingPrice", newPrice || "Open for Offers");
+      formData.append("revenue", newRevenue || "$0/mo");
+      formData.append("users", newUsers || "Prototype stage");
+      formData.append("githubRepo", repoLink || "");
+      formData.append("techStack", newTech || "");
+      formData.append("productDescription", newDesc || "No description provided.");
 
-    setMvps([newItem, ...mvps]);
-    setShowListModal(false);
+      const result = await createMvp(formData);
+      if (result.success && result.mvp) {
+        setMvps([result.mvp as MVP, ...mvps]);
+      }
+      setShowListModal(false);
 
-    // Reset form
-    setNewTitle("");
-    setNewTagline("");
-    setNewPrice("");
-    setNewRevenue("");
-    setNewUsers("");
-    setNewTech("");
-    setNewDesc("");
-    setRepoLink("");
+      // Reset form
+      setNewTitle("");
+      setNewTagline("");
+      setNewPrice("");
+      setNewRevenue("");
+      setNewUsers("");
+      setNewTech("");
+      setNewDesc("");
+      setRepoLink("");
+    } catch (e) {
+      console.error("Failed to create MVP:", e);
+      alert("Failed to list your MVP. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSendInquiry = (e: React.FormEvent) => {
@@ -209,6 +256,14 @@ export default function MVPMarketplace() {
       m.techStack.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesCategory && matchesReason && matchesSearch;
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-white">Loading MVPs...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-[var(--background)] text-[#f8fafc] py-12 px-6 bg-grid-pattern overflow-hidden">
@@ -234,7 +289,7 @@ export default function MVPMarketplace() {
                 MVP <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">Marketplace</span>
               </h1>
               <p className="text-slate-400 text-xs sm:text-sm mt-3 max-w-2xl leading-relaxed font-semibold">
-                Pakistan’s premier trust-driven marketplace. Acquire working codebases, discover pre-verified product traction, or buy ready-to-scale assets listed directly by verified developers.
+                Pakistan's premier trust-driven marketplace. Acquire working codebases, discover pre-verified product traction, or buy ready-to-scale assets listed directly by verified developers.
               </p>
             </div>
 
@@ -342,7 +397,7 @@ export default function MVPMarketplace() {
                   {/* Screenshot mockup */}
                   <div className="w-full h-36 rounded-xl overflow-hidden mb-4 border border-white/5 relative">
                     <img
-                      src={m.screenshot}
+                      src={m.screenshot || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3"}
                       alt={m.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
                     />
@@ -562,9 +617,10 @@ export default function MVPMarketplace() {
 
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs py-3 rounded-xl transition-all uppercase tracking-wider cursor-pointer"
+                  disabled={submitting}
+                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs py-3 rounded-xl transition-all uppercase tracking-wider cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Confirm and List MVP
+                  {submitting ? "Listing MVP..." : "Confirm and List MVP"}
                 </button>
               </form>
             </motion.div>
