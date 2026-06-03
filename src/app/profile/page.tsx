@@ -210,7 +210,8 @@ export default function ProfilePage() {
               <img
                 src={userAvatar}
                 alt={userName}
-                className="w-32 h-32 rounded-full border-4 border-emerald-500/20 object-cover shadow-lg"
+                className="w-32 h-32 rounded-full border-4 border-emerald-500/20 object-contain object-center bg-slate-800 shadow-lg"
+                referrerPolicy="no-referrer"
               />
               <button
                 type="button"

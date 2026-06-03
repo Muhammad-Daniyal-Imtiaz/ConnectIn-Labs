@@ -12,7 +12,7 @@ import PostComposerModal from "@/components/PostComposerModal";
 import {
   Loader2, AlertCircle, Sparkles, Plus, Users, Briefcase, Trophy,
   ShoppingBag, Building2, UserCircle2, ChevronRight, Pencil, BookOpen,
-  MapPin, CheckCircle2
+  MapPin, CheckCircle2, Search, Filter, X
 } from "lucide-react";
 
 const MODULES = [
@@ -98,6 +98,10 @@ export default function FeedPage() {
   const pathname = usePathname();
   const { data: session } = useSession();
 
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [showFilters, setShowFilters] = useState(false);
+
   useEffect(() => {
     async function loadFeed() {
       setLoading(true);
@@ -142,9 +146,25 @@ export default function FeedPage() {
     loadFeaturedCompanies();
   }, []);
 
+  // Filter Logic
+  const filteredPosts = postsList.filter((post) => {
+    const q = search.toLowerCase();
+    const matchSearch =
+      !q ||
+      post.title.toLowerCase().includes(q) ||
+      post.content.toLowerCase().includes(q) ||
+      post.userName?.toLowerCase().includes(q);
+    const matchCategory = categoryFilter === "All" || post.category === categoryFilter;
+    return matchSearch && matchCategory;
+  });
 
+  const activeFilters = categoryFilter !== "All" ? 1 : 0;
+  const clearFilters = () => {
+    setCategoryFilter("All");
+    setSearch("");
+  };
 
-  return (
+  const CATEGORIES = ["All", "Idea", "MVP", "Investment Wanted", "Partners Wanted", "Startup Space Wanted", "Cofounder Wanted"];  return (
     <div className="relative min-h-screen bg-[var(--background)] text-[#f8fafc] pt-4 pb-12 px-4 sm:px-6 bg-grid-pattern overflow-hidden">
       {/* Background Glowing Orbs */}
       <div className="absolute top-[-10%] left-[-15%] w-[60%] h-[60%] rounded-full bg-[#00a86b]/4 blur-[140px] pointer-events-none animate-pulse-glow"></div>
@@ -166,12 +186,13 @@ export default function FeedPage() {
 
               {/* Avatar — overlaps banner */}
               <div className="px-4 pb-4">
-                <div className="-mt-7 mb-3">
+                <div className="-mt-7 mb-3 relative z-10">
                   {userInfo?.avatarUrl || session?.user?.image ? (
                     <img
                       src={userInfo?.avatarUrl || session?.user?.image || ""}
                       alt={session?.user?.name || "User"}
                       className="w-14 h-14 rounded-full border-4 border-[#1d2226] object-cover bg-slate-800"
+                      referrerPolicy="no-referrer"
                     />
                   ) : (
                     <div className="w-14 h-14 rounded-full border-4 border-[#1d2226] bg-slate-800 flex items-center justify-center">
@@ -180,13 +201,13 @@ export default function FeedPage() {
                   )}
                 </div>
 
-                {session ? (
+                {session || userInfo ? (
                   <>
                     <p className="text-sm font-black text-white leading-tight truncate">
-                      {session.user?.name || "Builder"}
+                      {userInfo?.name || session?.user?.name || "Builder"}
                     </p>
                     <p className="text-[10px] text-slate-400 font-semibold mt-0.5 truncate">
-                      {session.user?.email}
+                      {userInfo?.email || session?.user?.email}
                     </p>
                     <div className="mt-3 pt-3 border-t border-white/5 space-y-1.5">
                       <Link href="/profile"
@@ -349,24 +370,70 @@ export default function FeedPage() {
               </div>
             </button>
 
+            {/* Feed Search & Advanced Filters */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  value={search} onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-[#1d2226] border border-[#38434f] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/10 transition-all shadow-lg"
+                  placeholder="Advanced Search roles, categories, skills, posts..." />
+              </div>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all shadow-lg ${showFilters || activeFilters > 0 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-[#1d2226] border-[#38434f] text-slate-400 hover:text-white"}`}>
+                <Filter className="w-4 h-4" />
+                Filters
+                {activeFilters > 0 && <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 text-[9px] font-black flex items-center justify-center">{activeFilters}</span>}
+              </button>
+              {activeFilters > 0 && (
+                <button onClick={clearFilters} className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#1d2226] border border-[#38434f] text-xs font-bold text-slate-400 hover:text-white transition-all shadow-lg">
+                  <X className="w-3.5 h-3.5" /> Clear
+                </button>
+              )}
+            </div>
+
+            {/* Expandable Filter Panel */}
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-4 overflow-hidden"
+                >
+                  <div className="grid grid-cols-1 gap-3 p-4 bg-[#1d2226] border border-[#38434f] rounded-xl shadow-lg">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Post Category</label>
+                      <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
+                        className="w-full bg-slate-900 border border-[#38434f] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/40 transition-all cursor-pointer">
+                        {CATEGORIES.map((o) => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Posts Feed Area */}
             {loading ? (
               <div className="flex flex-col items-center justify-center py-24 bg-[#1d2226] border border-[#38434f] rounded-lg">
                 <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-3" />
                 <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest font-mono">Loading Sandbox Updates...</p>
               </div>
-            ) : postsList.length === 0 ? (
+            ) : filteredPosts.length === 0 ? (
               <div className="text-center py-16 bg-[#1d2226] border border-[#38434f] rounded-lg">
                 <AlertCircle className="w-10 h-10 text-slate-600 mx-auto mb-3" />
                 <p className="text-white text-xs font-bold uppercase tracking-wider">No Updates Found</p>
                 <p className="text-[11px] text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
-                  No one has posted an update yet. Check back soon!
+                  No one has posted an update matching your search. Try different filters!
                 </p>
+                {activeFilters > 0 && <button onClick={clearFilters} className="mt-4 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">Clear filters</button>}
               </div>
             ) : (
               <div className="flex flex-col gap-2">
                 <AnimatePresence>
-                  {postsList.map((post) => (
+                  {filteredPosts.map((post) => (
                     <FeedPostCard key={post.id} post={post} />
                   ))}
                 </AnimatePresence>
