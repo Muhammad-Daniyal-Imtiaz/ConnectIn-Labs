@@ -18,6 +18,7 @@ import {
 
 import { freelanceProjectsData, startupCategories, FreelanceProject } from "../data";
 import { getFreelanceProjects, createFreelanceProject } from "../actions/freelance";
+import FreelanceProposalModal from "@/components/FreelanceProposalModal";
 
 export default function FreelancePage() {
   const [projects, setProjects] = useState<FreelanceProject[]>([]);
@@ -29,6 +30,10 @@ export default function FreelancePage() {
   const [showPostModal, setShowPostModal] = useState(false);
   const [successToast, setSuccessToast] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  
+  // Apply logic
+  const [applyProject, setApplyProject] = useState<any>(null);
+  const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
 
   // Form Fields
   const [formTitle, setFormTitle] = useState("");
@@ -211,10 +216,10 @@ export default function FreelancePage() {
             </div>
           ) : (
             filteredProjects.map(project => (
-              <div 
-                key={project.id}
-                className="glass-panel p-6 rounded-2xl border border-white/5 hover:border-teal-500/20 transition-all flex flex-col md:flex-row justify-between gap-6"
-              >
+              <div key={project.id} className="flex flex-col gap-2">
+                <div 
+                  className="glass-panel p-6 rounded-2xl border border-white/5 hover:border-teal-500/20 transition-all flex flex-col md:flex-row justify-between gap-6"
+                >
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2 mb-3">
                     <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-slate-900 border border-white/5 text-slate-400">
@@ -259,20 +264,93 @@ export default function FreelancePage() {
                     </div>
                   </div>
 
-                  <button 
-                    onClick={() => alert(`Proposal submitted! Indus Foundry Placements pipeline will match your portfolio criteria with ${project.client}.`)}
-                    className="w-full mt-6 bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Briefcase className="w-3.5 h-3.5" />
-                    Apply for Contract
-                  </button>
+                  <div className="mt-6 flex flex-col gap-2 w-full">
+                    {project.isOwner ? (
+                      <button 
+                        onClick={() => setExpandedProjectId(expandedProjectId === project.id ? null : project.id)}
+                        className="w-full bg-slate-800 hover:bg-slate-700 text-teal-400 border border-teal-500/30 text-xs font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        {expandedProjectId === project.id ? "Hide Submissions" : `View Submissions (${project.submissions?.length || 0})`}
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => !project.hasApplied && setApplyProject(project)}
+                        disabled={project.hasApplied}
+                        className={`w-full text-xs font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                          project.hasApplied
+                            ? "bg-slate-800 text-teal-400 border border-teal-500/30 cursor-not-allowed"
+                            : "bg-teal-500 hover:bg-teal-400 text-slate-950"
+                        }`}
+                      >
+                        {project.hasApplied ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Applied
+                          </>
+                        ) : (
+                          <>
+                            <Briefcase className="w-3.5 h-3.5" /> Submit Proposal
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
+              
+              {/* Expandable Submissions Section */}
+              {project.isOwner && expandedProjectId === project.id && (
+                <div className="mt-2 glass-panel p-6 rounded-2xl border border-white/5 bg-slate-900/50">
+                  <h5 className="text-sm font-bold text-white mb-4">Proposals & Submissions</h5>
+                  {!project.submissions || project.submissions.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic">No proposals submitted yet.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {project.submissions.map((sub: any) => (
+                        <div key={sub.id} className="bg-slate-900 border border-white/10 rounded-xl p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <p className="text-xs font-bold text-white flex items-center gap-2">
+                                {sub.applicantName || sub.name}
+                                <span className="text-[10px] text-slate-500 font-normal">{sub.email}</span>
+                              </p>
+                            </div>
+                            {sub.bidAmount && (
+                              <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">
+                                Bid: ${sub.bidAmount}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap italic bg-slate-950 p-3 rounded-lg border border-white/5 mt-2">
+                            "{sub.proposalText}"
+                          </p>
+                          {sub.portfolioLink && (
+                            <a href={sub.portfolioLink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] text-teal-400 hover:underline mt-3 font-semibold">
+                              <Globe className="w-3 h-3" /> View Portfolio
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             ))
           )}
         </div>
 
       </div>
+
+      {applyProject && (
+        <FreelanceProposalModal
+          project={applyProject}
+          onClose={() => setApplyProject(null)}
+          onSuccess={() => {
+            setProjects((prev: any[]) => prev.map(p => p.id === applyProject.id ? { ...p, hasApplied: true } : p));
+          }}
+        />
+      )}
 
       {/* Post Project Modal */}
       <AnimatePresence>

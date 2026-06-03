@@ -219,6 +219,58 @@ export const jobApplications = sqliteTable(
   })
 );
 
+// ─── Freelance Submissions ──────────────────────────────────────────────────
+export const freelanceSubmissions = sqliteTable(
+  "freelance_submissions",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id").notNull(), // FK → freelanceProjects.id
+    applicantUserId: text("applicant_user_id").notNull(), // FK → users.id
+    name: text("name").notNull().default(""),
+    email: text("email").notNull().default(""),
+    proposalText: text("proposal_text").notNull(),
+    portfolioLink: text("portfolio_link"),
+    bidAmount: integer("bid_amount"), // The proposed budget/rate
+    status: text("status").notNull().default("Submitted"), // 'Submitted' | 'Reviewed' | 'Accepted' | 'Rejected'
+    ...timestamps,
+  },
+  (t) => ({
+    uniqueSubmission: uniqueIndex("freelance_submissions_unique_idx").on(t.projectId, t.applicantUserId),
+    projectIdx: index("freelance_submissions_project_idx").on(t.projectId),
+    applicantIdx: index("freelance_submissions_applicant_idx").on(t.applicantUserId),
+  })
+);
+
+// ─── Challenges (Competitive Arena) ─────────────────────────────────────────
+export const challenges = sqliteTable(
+  "challenges",
+  {
+    id: text("id").primaryKey(),
+    postedByUserId: text("posted_by_user_id").notNull(), // FK → users.id
+    companyPageId: text("company_page_id"), // FK → companyPages.id
+    companyName: text("company_name").notNull(),
+    companyLogo: text("company_logo"),
+    companySlug: text("company_slug"),
+    
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    prize: text("prize").notNull(), // e.g. "PKR 500,000", "Direct Equity", "Pilot Integration"
+    duration: text("duration").notNull(), // e.g. "4 Weeks", "48 Hours"
+    location: text("location").notNull(), // e.g. "Remote", "Islamabad", "On-site"
+    minTeamMembers: integer("min_team_members").notNull().default(1),
+    maxTeamMembers: integer("max_team_members").notNull().default(5),
+    
+    category: text("category").notNull().default("Engineering"), // e.g. "AI", "Engineering", "Hardware"
+    status: text("status").notNull().default("Open"), // 'Open' | 'Closed' | 'Judging'
+    ...timestamps,
+  },
+  (t) => ({
+    posterIdx: index("challenges_poster_idx").on(t.postedByUserId),
+    companyIdx: index("challenges_company_idx").on(t.companyPageId),
+    statusIdx: index("challenges_status_idx").on(t.status),
+  })
+);
+
 // ─── Type exports ─────────────────────────────────────────────────────────────
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -243,3 +295,9 @@ export type NewJobPosting = typeof jobPostings.$inferInsert;
 
 export type JobApplication = typeof jobApplications.$inferSelect;
 export type NewJobApplication = typeof jobApplications.$inferInsert;
+
+export type FreelanceSubmission = typeof freelanceSubmissions.$inferSelect;
+export type NewFreelanceSubmission = typeof freelanceSubmissions.$inferInsert;
+
+export type Challenge = typeof challenges.$inferSelect;
+export type NewChallenge = typeof challenges.$inferInsert;
