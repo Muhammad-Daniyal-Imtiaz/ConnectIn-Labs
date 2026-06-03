@@ -13,7 +13,8 @@ import {
   Sparkles,
   Check,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Globe
 } from "lucide-react";
 
 import { freelanceProjectsData, startupCategories, FreelanceProject } from "../data";

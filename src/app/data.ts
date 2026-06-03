@@ -27,6 +27,10 @@ export interface FreelanceProject {
   skills: string[];
   description: string;
   postedDate: string;
+  // UI state fields (optional)
+  isOwner?: boolean;
+  hasApplied?: boolean;
+  submissions?: any[];
 }
 
 export interface IndividualInvestor {
