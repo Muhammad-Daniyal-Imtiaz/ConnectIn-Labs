@@ -4,10 +4,16 @@ import React, { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { getPosts } from "@/app/actions/posts";
+import { checkUserStatus } from "@/app/actions/user";
 import FeedPostCard from "@/components/FeedPostCard";
 import PostComposerModal from "@/components/PostComposerModal";
-import { Loader2, AlertCircle, Sparkles, Plus, Users, Briefcase, Trophy, ShoppingBag, Building2 } from "lucide-react";
+import {
+  Loader2, AlertCircle, Sparkles, Plus, Users, Briefcase, Trophy,
+  ShoppingBag, Building2, UserCircle2, ChevronRight, Pencil, BookOpen,
+  MapPin, CheckCircle2
+} from "lucide-react";
 
 const MODULES = [
   {
@@ -86,7 +92,11 @@ export default function FeedPage() {
   const [postsList, setPostsList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [composerOpen, setComposerOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState<any>(null);
+  const [companyCount, setCompanyCount] = useState(0);
+  const [featuredCompanies, setFeaturedCompanies] = useState<any[]>([]);
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   useEffect(() => {
     async function loadFeed() {
@@ -105,6 +115,33 @@ export default function FeedPage() {
     loadFeed();
   }, []);
 
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const res = await checkUserStatus();
+        if (res.isAuthenticated && res.user) {
+          setUserInfo(res.user);
+        }
+      } catch {}
+    }
+    loadUser();
+  }, [session]);
+
+  useEffect(() => {
+    async function loadFeaturedCompanies() {
+      try {
+        const { getAllCompanyPages } = await import("@/app/actions/company");
+        const res = await getAllCompanyPages(100);
+        if (res.success) {
+          setCompanyCount(res.pages.length);
+          const shuffled = [...res.pages].sort(() => Math.random() - 0.5);
+          setFeaturedCompanies(shuffled.slice(0, 3));
+        }
+      } catch {}
+    }
+    loadFeaturedCompanies();
+  }, []);
+
 
 
   return (
@@ -116,37 +153,164 @@ export default function FeedPage() {
       <div className="max-w-6xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-          {/* Left Sidebar: Info + Stats */}
-          <div className="lg:col-span-3 sticky top-[76px] space-y-4 hidden lg:block text-left">
-            <div className="bg-[#1d2226] border border-[#38434f] rounded-lg p-5 shadow-lg">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono text-[9px] font-black border border-emerald-500/20 mb-4 uppercase tracking-widest">
+          {/* Left Sidebar: User Profile Card + Stats */}
+          <div className="lg:col-span-3 sticky top-[76px] space-y-3 hidden lg:block text-left">
+
+            {/* Profile Card */}
+            <div className="bg-[#1d2226] border border-[#38434f] rounded-xl overflow-hidden shadow-lg">
+              {/* Banner */}
+              <div className="h-16 bg-gradient-to-br from-emerald-900/40 via-slate-800 to-indigo-900/30 relative">
+                <div className="absolute inset-0 opacity-20"
+                  style={{ backgroundImage: "radial-gradient(circle at 30% 50%, #00a86b 0%, transparent 60%), radial-gradient(circle at 80% 50%, #2563eb 0%, transparent 60%)" }} />
+              </div>
+
+              {/* Avatar — overlaps banner */}
+              <div className="px-4 pb-4">
+                <div className="-mt-7 mb-3">
+                  {session?.user?.image || userInfo?.avatarUrl ? (
+                    <img
+                      src={session?.user?.image || userInfo?.avatarUrl || ""}
+                      alt={session?.user?.name || "User"}
+                      className="w-14 h-14 rounded-full border-4 border-[#1d2226] object-cover bg-slate-800"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full border-4 border-[#1d2226] bg-slate-800 flex items-center justify-center">
+                      <UserCircle2 className="w-8 h-8 text-slate-500" />
+                    </div>
+                  )}
+                </div>
+
+                {session ? (
+                  <>
+                    <p className="text-sm font-black text-white leading-tight truncate">
+                      {session.user?.name || "Builder"}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5 truncate">
+                      {session.user?.email}
+                    </p>
+                    <div className="mt-3 pt-3 border-t border-white/5 space-y-1.5">
+                      <Link href="/profile"
+                        className="flex items-center justify-between text-[11px] text-slate-400 hover:text-emerald-400 transition-colors font-semibold group">
+                        <span className="flex items-center gap-1.5">
+                          <Pencil className="w-3 h-3" /> Edit Profile
+                        </span>
+                        <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Link>
+                      <Link href="/myposts"
+                        className="flex items-center justify-between text-[11px] text-slate-400 hover:text-emerald-400 transition-colors font-semibold group">
+                        <span className="flex items-center gap-1.5">
+                          <BookOpen className="w-3 h-3" /> My Posts
+                        </span>
+                        <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Link>
+                      <Link href="/company"
+                        className="flex items-center justify-between text-[11px] text-slate-400 hover:text-emerald-400 transition-colors font-semibold group">
+                        <span className="flex items-center gap-1.5">
+                          <Building2 className="w-3 h-3" /> Company Pages
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          {companyCount > 0 && (
+                            <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-[9px] font-black">
+                              {companyCount}
+                            </span>
+                          )}
+                          <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </span>
+                      </Link>                    </div>
+                  </>
+                ) : (
+                  <div className="mt-1">
+                    <p className="text-sm font-black text-white">Welcome, Builder</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Sign in to post and connect</p>
+                    <Link href="/login"
+                      className="mt-3 w-full inline-flex items-center justify-center py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition-all">
+                      Sign In
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Discover & Connect */}
+            <div className="bg-[#1d2226] border border-[#38434f] rounded-xl p-4 shadow-lg">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono text-[9px] font-black border border-emerald-500/20 mb-3 uppercase tracking-widest">
                 <Sparkles className="w-3 h-3" />
                 Foundry Hub Feed
               </div>
-              <h2 className="text-xl font-bold text-white uppercase tracking-tight">
+              <h2 className="text-sm font-bold text-white uppercase tracking-tight">
                 Discover & Connect
               </h2>
-              <p className="text-slate-400 text-xs mt-3 font-medium leading-relaxed">
+              <p className="text-slate-400 text-[11px] mt-2 font-medium leading-relaxed">
                 Explore live updates, MVP launches, and cofounder searches from Pakistan's most innovative builders.
-                Use advanced filters to pinpoint opportunities that match your expertise.
               </p>
             </div>
 
-            {/* Quick Ecosystem Stats Card */}
-            <div className="bg-[#1d2226] border border-[#38434f] rounded-lg p-4 text-[11px] text-slate-400">
-              <p className="font-bold text-white uppercase tracking-wider text-[10px] mb-2 font-mono">Sandbox Pulse</p>
-              <div className="flex justify-between py-1.5 border-b border-white/5">
-                <span>Active Builders</span>
-                <span className="text-white font-bold">1,248</span>
+            {/* Featured Companies */}
+            <div className="bg-[#1d2226] border border-[#38434f] rounded-xl p-4 text-[11px] text-slate-400">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="font-bold text-white uppercase tracking-wider text-[10px] font-mono">Featured Companies</p>
+                <Link href="/company" className="text-[9px] font-black uppercase tracking-wider text-emerald-400 hover:text-emerald-300">
+                  View All
+                </Link>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-white/5">
-                <span>Cofounder Syncs</span>
-                <span className="text-white font-bold">482</span>
-              </div>
-              <div className="flex justify-between py-1.5">
-                <span>Active MVPs</span>
-                <span className="text-white font-bold">89</span>
-              </div>
+
+              {featuredCompanies.length > 0 ? (
+                <div className="space-y-2">
+                  {featuredCompanies.map((company) => (
+                    <Link
+                      key={company.id}
+                      href={`/company/${company.slug}`}
+                      className="group block rounded-xl border border-white/5 bg-slate-950/35 p-3 transition hover:border-emerald-500/30 hover:bg-emerald-500/5"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-slate-900">
+                          {company.logoUrl ? (
+                            <img
+                              src={company.logoUrl}
+                              alt={company.name}
+                              className="h-full w-full object-cover"
+                              onError={(event) => (event.currentTarget.style.display = "none")}
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-emerald-500/10">
+                              <Building2 className="h-4 w-4 text-emerald-400" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <p className="truncate text-xs font-black text-white group-hover:text-emerald-300">{company.name}</p>
+                            {company.isVerified && <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-400" />}
+                          </div>
+                          <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-slate-400">{company.tagline}</p>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8.5px] font-black uppercase tracking-wider text-emerald-400">
+                              {company.stage}
+                            </span>
+                            <span className="rounded-full border border-white/10 bg-slate-800 px-2 py-0.5 text-[8.5px] font-bold text-slate-400">
+                              {company.industry}
+                            </span>
+                          </div>
+                          {company.headquarters && (
+                            <p className="mt-2 flex items-center gap-1 text-[9.5px] text-slate-500">
+                              <MapPin className="h-3 w-3" />
+                              {company.headquarters}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-white/10 bg-slate-950/30 p-4 text-center">
+                  <Building2 className="mx-auto mb-2 h-6 w-6 text-slate-600" />
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">No company pages yet</p>
+                  <Link href="/company/create" className="mt-3 inline-flex rounded-lg bg-emerald-500 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-950 hover:bg-emerald-400">
+                    Create Company
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
