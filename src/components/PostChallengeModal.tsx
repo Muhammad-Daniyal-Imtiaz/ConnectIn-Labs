@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Sparkles, Loader2, Target, Calendar, MapPin, Users, DollarSign, Building2 } from "lucide-react";
+import { X, Sparkles, Loader2, Target, Calendar, MapPin, Users, DollarSign, Building2, Plus, Trash2 } from "lucide-react";
 import { createChallenge, updateChallenge } from "@/app/actions/challenges";
 import { motion } from "framer-motion";
 
@@ -12,6 +12,8 @@ interface PostChallengeModalProps {
   editChallenge?: any;
 }
 
+const MAX_PRIZES = 20;
+
 export default function PostChallengeModal({ onClose, onCreated, companies, editChallenge }: PostChallengeModalProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -19,12 +21,42 @@ export default function PostChallengeModal({ onClose, onCreated, companies, edit
   const [formCompany, setFormCompany] = useState(editChallenge?.companyPageId || (companies.length > 0 ? companies[0].id : ""));
   const [formTitle, setFormTitle] = useState(editChallenge?.title || "");
   const [formCategory, setFormCategory] = useState(editChallenge?.category || "Engineering");
-  const [formPrize, setFormPrize] = useState(editChallenge?.prize || "");
   const [formDuration, setFormDuration] = useState(editChallenge?.duration || "");
   const [formLocation, setFormLocation] = useState(editChallenge?.location || "");
   const [formMinTeam, setFormMinTeam] = useState(editChallenge?.minTeamMembers || 1);
   const [formMaxTeam, setFormMaxTeam] = useState(editChallenge?.maxTeamMembers || 5);
   const [formDesc, setFormDesc] = useState(editChallenge?.description || "");
+
+  const parsePrizes = (val: any): string[] => {
+    if (!val) return [""];
+    if (Array.isArray(val)) return val.length ? val : [""];
+    try {
+      const p = JSON.parse(val);
+      return Array.isArray(p) && p.length ? p : [""];
+    } catch {
+      return [val || ""];
+    }
+  };
+
+  const [prizes, setPrizes] = useState<string[]>(() => parsePrizes(editChallenge?.prizesJson || editChallenge?.prize));
+
+  const handlePrizeChange = (index: number, value: string) => {
+    const next = [...prizes];
+    next[index] = value;
+    setPrizes(next);
+  };
+
+  const addPrize = () => {
+    if (prizes.length < MAX_PRIZES) {
+      setPrizes([...prizes, ""]);
+    }
+  };
+
+  const removePrize = (index: number) => {
+    if (prizes.length > 1) {
+      setPrizes(prizes.filter((_, i) => i !== index));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +64,13 @@ export default function PostChallengeModal({ onClose, onCreated, companies, edit
       setError("Please select a company to post this challenge.");
       return;
     }
-    
+
+    const nonEmptyPrizes = prizes.filter(p => p.trim());
+    if (!nonEmptyPrizes.length) {
+      setError("At least one prize is required.");
+      return;
+    }
+
     setError("");
     setSubmitting(true);
 
@@ -40,7 +78,7 @@ export default function PostChallengeModal({ onClose, onCreated, companies, edit
     fd.append("companyPageId", formCompany);
     fd.append("title", formTitle);
     fd.append("category", formCategory);
-    fd.append("prize", formPrize);
+    fd.append("prizesJson", JSON.stringify(nonEmptyPrizes));
     fd.append("duration", formDuration);
     fd.append("location", formLocation);
     fd.append("minTeamMembers", formMinTeam.toString());
@@ -122,20 +160,56 @@ export default function PostChallengeModal({ onClose, onCreated, companies, edit
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">Prize / Incentive *</label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
-                  <input 
-                    required 
-                    value={formPrize} 
-                    onChange={e => setFormPrize(e.target.value)} 
-                    placeholder="e.g. PKR 500,000"
-                    className="w-full bg-slate-900 border border-white/10 rounded-lg pl-9 pr-3 py-2.5 text-sm text-white focus:border-violet-500/50 outline-none"
-                  />
-                </div>
+            {/* Prizes Section - Up to 20 prizes, first one required */}
+            <div>
+              <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                Prizes / Incentives <span className="text-violet-400 text-[10px]">(1 required, up to {MAX_PRIZES})</span>
+              </label>
+              <div className="space-y-2">
+                {prizes.map((prize, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      {i === 0 ? (
+                        <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-amber-400" />
+                      ) : (
+                        <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-500">#{i + 1}</span>
+                      )}
+                      <input
+                        required={i === 0}
+                        value={prize}
+                        onChange={e => handlePrizeChange(i, e.target.value)}
+                        placeholder={i === 0 ? "e.g. PKR 500,000 (Required)" : `e.g. Runner-up prize #${i + 1}`}
+                        className="w-full bg-slate-900 border border-white/10 rounded-lg pl-9 pr-3 py-2.5 text-sm text-white focus:border-violet-500/50 outline-none"
+                      />
+                    </div>
+                    {i === 0 ? (
+                      <span className="w-9 h-9 flex items-center justify-center text-[10px] font-bold text-amber-400 bg-amber-500/10 rounded-lg border border-amber-500/20 shrink-0">
+                        1st
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => removePrize(i)}
+                        className="w-9 h-9 flex items-center justify-center text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 rounded-lg border border-red-500/20 transition-all shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
+              {prizes.length < MAX_PRIZES && (
+                <button
+                  type="button"
+                  onClick={addPrize}
+                  className="mt-2 flex items-center gap-1.5 text-xs font-bold text-violet-400 hover:text-violet-300 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add another prize ({prizes.length}/{MAX_PRIZES})
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-300 mb-1.5">Duration *</label>
                 <div className="relative">
@@ -162,10 +236,7 @@ export default function PostChallengeModal({ onClose, onCreated, companies, edit
                   />
                 </div>
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-xs font-bold text-slate-300 mb-1.5">Category *</label>
                 <select 
                   value={formCategory} 
@@ -179,6 +250,10 @@ export default function PostChallengeModal({ onClose, onCreated, companies, edit
                   <option value="Data Science">Data Science</option>
                 </select>
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="md:col-span-2" />
               <div>
                 <label className="block text-xs font-bold text-slate-300 mb-1.5 flex items-center gap-1"><Users className="w-3 h-3"/> Min Team</label>
                 <input 

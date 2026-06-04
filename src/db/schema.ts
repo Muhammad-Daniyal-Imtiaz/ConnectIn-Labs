@@ -254,7 +254,7 @@ export const challenges = sqliteTable(
     
     title: text("title").notNull(),
     description: text("description").notNull(),
-    prize: text("prize").notNull(), // e.g. "PKR 500,000", "Direct Equity", "Pilot Integration"
+    prizesJson: text("prizes_json").notNull().default("[]"), // JSON array of up to 20 prize strings; first is required
     duration: text("duration").notNull(), // e.g. "4 Weeks", "48 Hours"
     location: text("location").notNull(), // e.g. "Remote", "Islamabad", "On-site"
     minTeamMembers: integer("min_team_members").notNull().default(1),
@@ -268,6 +268,54 @@ export const challenges = sqliteTable(
     posterIdx: index("challenges_poster_idx").on(t.postedByUserId),
     companyIdx: index("challenges_company_idx").on(t.companyPageId),
     statusIdx: index("challenges_status_idx").on(t.status),
+  })
+);
+
+// ─── Challenge Competition Teams ──────────────────────────────────────────
+export const challengeTeams = sqliteTable(
+  "challenge_teams",
+  {
+    id: text("id").primaryKey(),
+    challengeId: text("challenge_id").notNull(), // FK → challenges.id
+    teamName: text("team_name").notNull(),
+    captainUserId: text("captain_user_id").notNull(), // FK → users.id
+    membersJson: text("members_json").notNull().default("[]"), // JSON array of {name, email, linkedinUrl, role}
+    invitationStatus: text("invitation_status").notNull().default("Active"), // 'Active' | 'Disbanded'
+    ...timestamps,
+  },
+  (t) => ({
+    challengeIdx: index("challenge_teams_challenge_idx").on(t.challengeId),
+    captainIdx: index("challenge_teams_captain_idx").on(t.captainUserId),
+  })
+);
+
+// ─── Challenge Submissions ──────────────────────────────────────────────
+export const challengeSubmissions = sqliteTable(
+  "challenge_submissions",
+  {
+    id: text("id").primaryKey(),
+    challengeId: text("challenge_id").notNull(), // FK → challenges.id
+    teamId: text("team_id").notNull(), // FK → challenge_teams.id
+    captainUserId: text("captain_user_id").notNull(), // FK → users.id
+    teamName: text("team_name").notNull(),
+    title: text("title").notNull(), // Submission title / project name
+    description: text("description").notNull(), // What was achieved, approach, outcomes
+    videoLink: text("video_link"), // Demo / walkthrough video URL
+    githubUrl: text("github_url"), // Source code repository
+    liveDemoUrl: text("live_demo_url"), // Deployed app / live demo
+    techStackJson: text("tech_stack_json").notNull().default("[]"), // JSON string[]
+    teamMembersJson: text("team_members_json").notNull().default("[]"), // JSON array of {name, email, linkedinUrl, role}
+    additionalLinksJson: text("additional_links_json").default("[]"), // JSON array of {label, url}
+    status: text("status").notNull().default("Submitted"), // 'Submitted' | 'Under Review' | 'Shortlisted' | 'Winner' | 'Rejected'
+    judgeNotes: text("judge_notes"), // Internal notes from judges
+    prizeWon: text("prize_won"), // Which prize they won (if winner)
+    ...timestamps,
+  },
+  (t) => ({
+    challengeSubmissionIdx: index("challenge_submissions_challenge_idx").on(t.challengeId),
+    teamSubmissionIdx: index("challenge_submissions_team_idx").on(t.teamId),
+    captainSubmissionIdx: index("challenge_submissions_captain_idx").on(t.captainUserId),
+    statusSubmissionIdx: index("challenge_submissions_status_idx").on(t.status),
   })
 );
 
@@ -301,3 +349,9 @@ export type NewFreelanceSubmission = typeof freelanceSubmissions.$inferInsert;
 
 export type Challenge = typeof challenges.$inferSelect;
 export type NewChallenge = typeof challenges.$inferInsert;
+
+export type ChallengeTeam = typeof challengeTeams.$inferSelect;
+export type NewChallengeTeam = typeof challengeTeams.$inferInsert;
+
+export type ChallengeSubmission = typeof challengeSubmissions.$inferSelect;
+export type NewChallengeSubmission = typeof challengeSubmissions.$inferInsert;
