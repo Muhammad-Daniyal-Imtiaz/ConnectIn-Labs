@@ -1,5 +1,5 @@
-// OpenNext Cloudflare configuration
-module.exports = {
+// @ts-nocheck
+export default {
   experimental: {
     verbose: true,
   },
