@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Required for Cloudflare Pages via OpenNext
   output: "standalone",
   images: {
     unoptimized: true,
@@ -16,14 +17,9 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "10mb",
     },
   },
-  // Mark @libsql/client as external so it isn’t bundled for the edge worker
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      // Preserve any existing externals and add libsql client
-      config.externals = [...(config.externals ?? []), "@libsql/client"];
-    }
-    return config;
-  },
+  // Tell Next.js NOT to bundle @libsql packages — they must stay as runtime imports
+  // This works for both Node.js (dev) and edge/workerd (Cloudflare) targets
+  serverExternalPackages: ["@libsql/client", "@libsql/client/web"],
 };
 
 export default nextConfig;
