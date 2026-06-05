@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "10mb",
     },
-    serverComponentsExternalPackages: [
+    serverExternalPackages: [
       "openid-client",
       "@panva/oauth4webapi",
       "jose",
