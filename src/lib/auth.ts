@@ -10,12 +10,8 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "placeholder-client-id",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "placeholder-client-secret",
-      // Skip OIDC discovery — openid-client uses Node.js http/https
-      // which aren't available in Cloudflare Workers.
-      wellKnown: null as unknown as undefined,
-      // Skip PKCE (requires openid-client generators).
-      checks: ["state"],
-      idToken: false,
+      // Bypass OIDC discovery — openid-client uses Node.js http/https
+      // which crash in Cloudflare Workers. We provide all endpoints manually.
       authorization: {
         url: "https://accounts.google.com/o/oauth2/v2/auth",
         params: {
@@ -25,8 +21,7 @@ export const authOptions: NextAuthOptions = {
           scope: "openid email profile",
         },
       },
-      // Provide custom token exchange using fetch instead of
-      // openid-client's Node.js http/https-based handler.
+      // Custom token exchange via fetch (no openid-client / Node.js http).
       token: {
         url: "https://oauth2.googleapis.com/token",
         async request({ provider, params, checks }: any) {
@@ -43,11 +38,11 @@ export const authOptions: NextAuthOptions = {
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body,
           });
-          return { tokens: await res.json() };
+          const tokens = await res.json();
+          return { tokens };
         },
       },
-      // Provide custom userinfo fetch using fetch instead of
-      // openid-client's Node.js http/https-based handler.
+      // Custom userinfo fetch via fetch (no openid-client / Node.js http).
       userinfo: {
         url: "https://openidconnect.googleapis.com/v1/userinfo",
         async request({ tokens }: any) {
