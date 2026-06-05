@@ -26,7 +26,7 @@ inclusion: always
 - Runtime: `workerd` with `nodejs_compat` (wrangler.toml)
 - **`src/db/index.ts` MUST use `@libsql/client/web` and `drizzle-orm/libsql/web`** — the bare Node.js variants crash workerd
 - `next.config.ts` uses `serverExternalPackages: ["@libsql/client", "@libsql/client/web"]`
-- `open-next.config.ts` sets `overrides: { wrapper: "cloudflare-node" }`
+- `open-next.config.ts` MUST set `cloudflare: { useWorkerdCondition: false }` — without this, esbuild tries to resolve `@libsql/isomorphic-ws ./web.mjs` via the `workerd` export condition which doesn't exist on disk → build fails
 - Env vars set as Cloudflare Pages secrets (not in wrangler.toml): `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 
 ---
