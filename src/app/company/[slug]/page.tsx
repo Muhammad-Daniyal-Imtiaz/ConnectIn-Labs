@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   Building2, Globe, X as XIcon, Link2, MapPin, Users, Calendar,
   Briefcase, Tag, Sparkles, ChevronRight, Loader2, AlertCircle,
-  ExternalLink, Plus, CheckCircle2, Zap, Mail, Download, Paperclip
+  ExternalLink, Plus, CheckCircle2, Zap, Mail, Download, Paperclip, Edit
 } from "lucide-react";
 import { getCompanyPageBySlug, getCompanySubmissions } from "@/app/actions/company";
 import { getAllJobs, deleteJobPosting } from "@/app/actions/jobs";
@@ -123,6 +123,12 @@ export default function CompanyProfilePage() {
               <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider ${STAGE_COLORS[page.stage] || STAGE_COLORS.Startup}`}>
                 {page.stage}
               </span>
+              {isOwner && (
+                <Link href="/company/form-sync"
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-black uppercase tracking-wider hover:bg-emerald-500/20 transition-all">
+                  <Edit className="w-3 h-3" /> Edit
+                </Link>
+              )}
             </div>
             <p className="text-slate-400 text-sm mt-0.5">{page.tagline}</p>
           </div>

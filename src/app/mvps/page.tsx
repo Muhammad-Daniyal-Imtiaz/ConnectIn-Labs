@@ -12,7 +12,8 @@ import {
   Plus,
   X,
   Activity,
-  Laptop
+  Laptop,
+  Filter
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getMvps, createMvp } from "@/app/actions/mvps";
@@ -37,6 +38,7 @@ interface MVP {
   userRole: string;
   userAvatar: string;
   githubRepo?: string | null;
+  createdAt?: string | null;
 }
 
 const initialMVPs: MVP[] = [
@@ -126,11 +128,21 @@ const initialMVPs: MVP[] = [
   }
 ];
 
+const parsePrice = (price: string): number | null => {
+  const cleaned = price.replace(/[$,]/g, "").trim();
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? null : num;
+};
+
 export default function MVPMarketplace() {
   const [mvps, setMvps] = useState<MVP[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedReason, setSelectedReason] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [showFilters, setShowFilters] = useState(false);
   const [inquireMvp, setInquireMvp] = useState<MVP | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -195,6 +207,20 @@ export default function MVPMarketplace() {
     fetchMvps();
   }, []);
 
+  const activeFilterCount =
+    (selectedCategory !== "All" ? 1 : 0) +
+    (selectedReason !== "All" ? 1 : 0) +
+    (priceMin !== "" ? 1 : 0) +
+    (priceMax !== "" ? 1 : 0);
+
+  const clearFilters = () => {
+    setSelectedCategory("All");
+    setSelectedReason("All");
+    setPriceMin("");
+    setPriceMax("");
+    setSortOrder("newest");
+  };
+
   const handleListMvp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle || !newTagline) return;
@@ -248,14 +274,31 @@ export default function MVPMarketplace() {
     }, 2000);
   };
 
-  const filteredMVPs = mvps.filter(m => {
-    const matchesCategory = selectedCategory === "All" || m.category === selectedCategory;
-    const matchesReason = selectedReason === "All" || m.reason === selectedReason;
-    const matchesSearch = m.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.tagline.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.techStack.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesCategory && matchesReason && matchesSearch;
-  });
+  const filteredMVPs = mvps
+    .filter(m => {
+      const matchesCategory = selectedCategory === "All" || m.category === selectedCategory;
+      const matchesReason = selectedReason === "All" || m.reason === selectedReason;
+      const matchesSearch = m.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.tagline.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.techStack.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const mPrice = parsePrice(m.askingPrice);
+      const minVal = parseFloat(priceMin);
+      const maxVal = parseFloat(priceMax);
+      const matchesMin = priceMin === "" || (mPrice !== null && !isNaN(minVal) && mPrice >= minVal);
+      const matchesMax = priceMax === "" || (mPrice !== null && !isNaN(maxVal) && mPrice <= maxVal);
+
+      return matchesCategory && matchesReason && matchesSearch && matchesMin && matchesMax;
+    })
+    .sort((a, b) => {
+      if (a.createdAt && b.createdAt) {
+        const diff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        return sortOrder === "newest" ? -diff : diff;
+      }
+      if (a.createdAt) return sortOrder === "newest" ? -1 : 1;
+      if (b.createdAt) return sortOrder === "newest" ? 1 : -1;
+      return 0;
+    });
 
   if (loading) {
     return (
@@ -306,48 +349,125 @@ export default function MVPMarketplace() {
         </div>
 
         {/* Search & Filtration Panels */}
-        <div className="mb-10 grid grid-cols-1 lg:grid-cols-4 gap-6 items-center">
-          {/* Search bar */}
-          <div className="lg:col-span-2 relative">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500">
-              <Search className="w-4 h-4" />
+        <div className="mb-10">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-center mb-4">
+            {/* Search bar */}
+            <div className="lg:col-span-3 relative">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500">
+                <Search className="w-4 h-4" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search MVP name, keywords, or tech stack..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-[#0c111d] border border-white/5 focus:border-emerald-500/30 text-white text-xs px-10 py-3.5 rounded-xl outline-none transition-all placeholder:text-slate-500 font-semibold"
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Search MVP name, keywords, or tech stack..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#0c111d] border border-white/5 focus:border-emerald-500/30 text-white text-xs px-10 py-3.5 rounded-xl outline-none transition-all placeholder:text-slate-500 font-semibold"
-            />
+
+            {/* Filter Toggle */}
+            <div>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="w-full inline-flex items-center justify-center gap-2 bg-[#0c111d] border border-white/5 hover:border-emerald-500/30 text-white text-xs px-4 py-3.5 rounded-xl outline-none transition-all cursor-pointer font-bold"
+              >
+                <Filter className="w-4 h-4" />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500 text-[9px] font-black text-slate-950">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Categories Selector */}
-          <div>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full bg-[#0c111d] border border-white/5 focus:border-emerald-500/30 text-white text-xs px-4 py-3.5 rounded-xl outline-none transition-all cursor-pointer font-bold"
-            >
-              <option disabled>Filter by Category</option>
-              {categories.map(c => (
-                <option key={c} value={c}>{c === "All" ? "All Categories" : c}</option>
-              ))}
-            </select>
-          </div>
+          {/* Expandable Filter Panel */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-[#0c111d] border border-white/5 rounded-2xl p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                  {/* Category */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Category</label>
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="w-full bg-[#05070c] border border-white/5 focus:border-emerald-500/30 text-white text-xs px-4 py-3 rounded-xl outline-none transition-all cursor-pointer font-bold"
+                    >
+                      <option disabled>Filter by Category</option>
+                      {categories.map(c => (
+                        <option key={c} value={c}>{c === "All" ? "All Categories" : c}</option>
+                      ))}
+                    </select>
+                  </div>
 
-          {/* Reason Selector */}
-          <div>
-            <select
-              value={selectedReason}
-              onChange={(e) => setSelectedReason(e.target.value)}
-              className="w-full bg-[#0c111d] border border-white/5 focus:border-emerald-500/30 text-white text-xs px-4 py-3.5 rounded-xl outline-none transition-all cursor-pointer font-bold"
-            >
-              <option disabled>Filter by Reason for Sale</option>
-              {reasons.map(r => (
-                <option key={r} value={r}>{r === "All" ? "All Reasons" : `Sale Reason: ${r}`}</option>
-              ))}
-            </select>
-          </div>
+                  {/* Reason */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Sale Reason</label>
+                    <select
+                      value={selectedReason}
+                      onChange={(e) => setSelectedReason(e.target.value)}
+                      className="w-full bg-[#05070c] border border-white/5 focus:border-emerald-500/30 text-white text-xs px-4 py-3 rounded-xl outline-none transition-all cursor-pointer font-bold"
+                    >
+                      <option disabled>Filter by Reason for Sale</option>
+                      {reasons.map(r => (
+                        <option key={r} value={r}>{r === "All" ? "All Reasons" : `Sale Reason: ${r}`}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Price Min */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Min Price ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 1000"
+                      value={priceMin}
+                      onChange={(e) => setPriceMin(e.target.value)}
+                      className="w-full bg-[#05070c] border border-white/5 focus:border-emerald-500/30 text-white text-xs px-4 py-3 rounded-xl outline-none transition-all placeholder:text-slate-500 font-bold"
+                    />
+                  </div>
+
+                  {/* Price Max */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Max Price ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 5000"
+                      value={priceMax}
+                      onChange={(e) => setPriceMax(e.target.value)}
+                      className="w-full bg-[#05070c] border border-white/5 focus:border-emerald-500/30 text-white text-xs px-4 py-3 rounded-xl outline-none transition-all placeholder:text-slate-500 font-bold"
+                    />
+                  </div>
+
+                  {/* Sort + Clear */}
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => setSortOrder(sortOrder === "newest" ? "oldest" : "newest")}
+                      className="w-full inline-flex items-center justify-center gap-1.5 bg-[#05070c] border border-white/5 hover:border-emerald-500/30 text-white text-[10px] px-3 py-3 rounded-xl outline-none transition-all cursor-pointer font-bold uppercase tracking-wider"
+                    >
+                      {sortOrder === "newest" ? "Newest First" : "Oldest First"}
+                    </button>
+                    <button
+                      onClick={clearFilters}
+                      className="w-full inline-flex items-center justify-center gap-1.5 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 text-[10px] px-3 py-3 rounded-xl outline-none transition-all cursor-pointer font-bold uppercase tracking-wider"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      Clear Filters
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Dynamic Grid */}

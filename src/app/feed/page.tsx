@@ -101,6 +101,8 @@ export default function FeedPage() {
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [sortBy, setSortBy] = useState<"Latest" | "Oldest">("Latest");
+  const [dateRange, setDateRange] = useState("Any Time");
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"feed" | "jobs">("feed");
 
@@ -149,24 +151,67 @@ export default function FeedPage() {
   }, []);
 
   // Filter Logic
-  const filteredPosts = postsList.filter((post) => {
-    const q = search.toLowerCase();
-    const matchSearch =
-      !q ||
-      post.title.toLowerCase().includes(q) ||
-      post.content.toLowerCase().includes(q) ||
-      post.userName?.toLowerCase().includes(q);
-    const matchCategory = categoryFilter === "All" || post.category === categoryFilter;
-    return matchSearch && matchCategory;
-  });
+  const filteredPosts = postsList
+    .filter((post) => {
+      const q = search.toLowerCase();
+      const matchSearch =
+        !q ||
+        post.title.toLowerCase().includes(q) ||
+        post.content.toLowerCase().includes(q) ||
+        post.userName?.toLowerCase().includes(q);
+      const matchCategory = categoryFilter === "All" || post.category === categoryFilter;
 
-  const activeFilters = categoryFilter !== "All" ? 1 : 0;
+      let matchDate = true;
+      if (dateRange !== "Any Time") {
+        const now = new Date();
+        const postDate = new Date(post.createdAt);
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        switch (dateRange) {
+          case "Today":
+            matchDate = postDate >= startOfDay;
+            break;
+          case "This Week": {
+            const dayOfWeek = now.getDay();
+            const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            const startOfWeek = new Date(startOfDay);
+            startOfWeek.setDate(startOfWeek.getDate() - diff);
+            matchDate = postDate >= startOfWeek;
+            break;
+          }
+          case "This Month": {
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            matchDate = postDate >= startOfMonth;
+            break;
+          }
+          case "This Year": {
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            matchDate = postDate >= startOfYear;
+            break;
+          }
+        }
+      }
+
+      return matchSearch && matchCategory && matchDate;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortBy === "Latest" ? dateB - dateA : dateA - dateB;
+    });
+
+  const activeFilters = (categoryFilter !== "All" ? 1 : 0) + (dateRange !== "Any Time" ? 1 : 0);
   const clearFilters = () => {
     setCategoryFilter("All");
     setSearch("");
+    setSortBy("Latest");
+    setDateRange("Any Time");
   };
 
-  const CATEGORIES = ["All", "Idea", "MVP", "Investment Wanted", "Partners Wanted", "Startup Space Wanted", "Cofounder Wanted"];  return (
+  const CATEGORIES = ["All", "Idea", "MVP", "Investment Wanted", "Partners Wanted", "Startup Space Wanted", "Cofounder Wanted"];
+  const SORT_OPTIONS = ["Latest", "Oldest"];
+  const DATE_RANGES = ["Any Time", "Today", "This Week", "This Month", "This Year"];
+  return (
     <div className="relative min-h-screen bg-[var(--background)] text-[#f8fafc] pt-4 pb-12 px-4 sm:px-6 bg-grid-pattern overflow-hidden">
       {/* Background Glowing Orbs */}
       <div className="absolute top-[-10%] left-[-15%] w-[60%] h-[60%] rounded-full bg-[#00a86b]/4 blur-[140px] pointer-events-none animate-pulse-glow"></div>
@@ -431,14 +476,38 @@ export default function FeedPage() {
                   exit={{ opacity: 0, height: 0 }}
                   className="mb-4 overflow-hidden"
                 >
-                  <div className="grid grid-cols-1 gap-3 p-4 bg-[#1d2226] border border-[#38434f] rounded-xl shadow-lg">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Post Category</label>
-                      <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="w-full bg-slate-900 border border-[#38434f] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/40 transition-all cursor-pointer">
-                        {CATEGORIES.map((o) => <option key={o} value={o}>{o}</option>)}
-                      </select>
+                  <div className="p-4 bg-[#1d2226] border border-[#38434f] rounded-xl shadow-lg">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Category</label>
+                        <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
+                          className="w-full bg-slate-900 border border-[#38434f] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/40 transition-all cursor-pointer">
+                          {CATEGORIES.map((o) => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Sort By</label>
+                        <select value={sortBy} onChange={(e) => setSortBy(e.target.value as "Latest" | "Oldest")}
+                          className="w-full bg-slate-900 border border-[#38434f] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/40 transition-all cursor-pointer">
+                          {SORT_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date Range</label>
+                        <select value={dateRange} onChange={(e) => setDateRange(e.target.value)}
+                          className="w-full bg-slate-900 border border-[#38434f] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/40 transition-all cursor-pointer">
+                          {DATE_RANGES.map((o) => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </div>
                     </div>
+                    {activeFilters > 0 && (
+                      <div className="mt-3 pt-3 border-t border-white/5 flex justify-end">
+                        <button onClick={clearFilters}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-[#38434f] text-[11px] font-bold text-slate-400 hover:text-white hover:border-slate-500 transition-all">
+                          <X className="w-3 h-3" /> Clear All Filters
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}

@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import {
   Building2, Plus, Search, MapPin, Users, Briefcase, Tag,
-  Sparkles, Loader2, AlertCircle, CheckCircle2, ChevronRight, Zap
+  Sparkles, Loader2, AlertCircle, CheckCircle2, ChevronRight, Zap,
+  Filter, X, Edit
 } from "lucide-react";
 import { getAllCompanyPages, getMyCompanyPage } from "@/app/actions/company";
 
@@ -28,6 +30,9 @@ export default function CompaniesPage() {
   const [search, setSearch] = useState("");
   const [industry, setIndustry] = useState("All");
   const [stage, setStage] = useState("All");
+  const [viewFilter, setViewFilter] = useState<"all" | "mine">("all");
+  const [locationSearch, setLocationSearch] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -43,12 +48,22 @@ export default function CompaniesPage() {
     load();
   }, [session]);
 
+  const activeFilters = (industry !== "All" ? 1 : 0) + (stage !== "All" ? 1 : 0) + (locationSearch ? 1 : 0);
+
+  const clearFilters = () => {
+    setIndustry("All");
+    setStage("All");
+    setLocationSearch("");
+  };
+
   const filtered = pages.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.tagline.toLowerCase().includes(search.toLowerCase());
     const matchIndustry = industry === "All" || p.industry === industry;
     const matchStage = stage === "All" || p.stage === stage;
-    return matchSearch && matchIndustry && matchStage;
+    const matchLocation = !locationSearch || (p.headquarters && p.headquarters.toLowerCase().includes(locationSearch.toLowerCase()));
+    const matchView = viewFilter === "all" || (myPage && p.id === myPage.id);
+    return matchSearch && matchIndustry && matchStage && matchLocation && matchView;
   });
 
   return (
@@ -84,17 +99,43 @@ export default function CompaniesPage() {
 
         {/* My Company Banner */}
         {myPage && (
-          <Link href={`/company/${myPage.slug}`}
-            className="flex items-center gap-3 p-4 mb-6 bg-emerald-500/5 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/10 transition-all group">
-            <div className="w-10 h-10 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-              {myPage.logoUrl ? <img src={myPage.logoUrl} alt="" className="w-full h-full object-cover" /> : <Building2 className="w-5 h-5 text-slate-500" />}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-black text-emerald-400 uppercase tracking-wider font-mono">Your Company Page</p>
-              <p className="text-sm font-bold text-white">{myPage.name}</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
-          </Link>
+          <div className="flex items-center gap-3 p-4 mb-6 bg-emerald-500/5 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/10 transition-all group">
+            <Link href={`/company/${myPage.slug}`} className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-10 h-10 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                {myPage.logoUrl ? <img src={myPage.logoUrl} alt="" className="w-full h-full object-cover" /> : <Building2 className="w-5 h-5 text-slate-500" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-black text-emerald-400 uppercase tracking-wider font-mono">Your Company Page</p>
+                <p className="text-sm font-bold text-white">{myPage.name}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
+            </Link>
+            <Link href="/company/form-sync"
+              className="p-2.5 rounded-lg bg-slate-800 border border-white/10 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30 transition-all"
+              title="Edit Company Page">
+              <Edit className="w-4 h-4" />
+            </Link>
+          </div>
+        )}
+
+        {/* View Toggle */}
+        {session && (
+          <div className="flex items-center gap-1 mb-6 bg-[#1d2226] p-1 rounded-lg border border-[#38434f] w-fit">
+            {[
+              { key: "all" as const, label: "All Companies" },
+              { key: "mine" as const, label: "My Companies" },
+            ].map(tab => (
+              <button key={tab.key} onClick={() => setViewFilter(tab.key)}
+                className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
+                  viewFilter === tab.key
+                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         )}
 
         {/* Filters */}
@@ -105,15 +146,60 @@ export default function CompaniesPage() {
               className="w-full bg-slate-900 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/10 transition-all"
               placeholder="Search companies..." />
           </div>
-          <select value={industry} onChange={(e) => setIndustry(e.target.value)}
-            className="bg-slate-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/40 transition-all">
-            {INDUSTRIES.map((i) => <option key={i} value={i}>{i}</option>)}
-          </select>
-          <select value={stage} onChange={(e) => setStage(e.target.value)}
-            className="bg-slate-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/40 transition-all">
-            {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          <button onClick={() => setShowFilters(!showFilters)}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+              showFilters || activeFilters > 0
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                : "bg-slate-900 border-white/10 text-slate-400 hover:text-white"
+            }`}>
+            <Filter className="w-4 h-4" />
+            Filters
+            {activeFilters > 0 && <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 text-[9px] font-black flex items-center justify-center">{activeFilters}</span>}
+          </button>
+          {activeFilters > 0 && (
+            <button onClick={clearFilters} className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs font-bold text-slate-400 hover:text-white transition-all">
+              <X className="w-3.5 h-3.5" /> Clear
+            </button>
+          )}
         </div>
+
+        {/* Expandable Filter Panel */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6 overflow-hidden"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-[#1d2226] border border-[#38434f] rounded-xl">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Industry</label>
+                  <select value={industry} onChange={(e) => setIndustry(e.target.value)}
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/40 transition-all cursor-pointer">
+                    {INDUSTRIES.map((i) => <option key={i} value={i}>{i}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Stage</label>
+                  <select value={stage} onChange={(e) => setStage(e.target.value)}
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/40 transition-all cursor-pointer">
+                    {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Location / City</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                    <input value={locationSearch} onChange={(e) => setLocationSearch(e.target.value)}
+                      className="w-full bg-slate-900 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/40 transition-all"
+                      placeholder="Filter by city..." />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Grid */}
         {loading ? (
@@ -126,12 +212,21 @@ export default function CompaniesPage() {
             <Building2 className="w-10 h-10 text-slate-600 mx-auto mb-3" />
             <p className="text-white text-xs font-bold uppercase tracking-wider">No Companies Found</p>
             <p className="text-[11px] text-slate-500 mt-1">
-              {session ? "Be the first to create a company page." : "Sign in to create the first company page."}
+              {viewFilter === "mine" && myPage
+                ? "Your company doesn't match the active filters."
+                : session
+                  ? "Be the first to create a company page."
+                  : "Sign in to create the first company page."}
             </p>
             {session && !myPage && (
               <Link href="/company/create" className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-black">
                 <Plus className="w-3.5 h-3.5" /> Create First Page
               </Link>
+            )}
+            {activeFilters > 0 && (
+              <button onClick={clearFilters} className="mt-4 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
+                Clear filters
+              </button>
             )}
           </div>
         ) : (

@@ -6,7 +6,8 @@ import { useSession } from "next-auth/react";
 import {
   Target, Search, Plus, Trophy, Calendar, MapPin, Users, Loader2,
   AlertCircle, Building2, Zap, Edit, X, Sparkles, DollarSign, Medal,
-  Gift, Link2, Video, Code2, Globe, UserPlus, Trash2, ChevronRight
+  Gift, Link2, Video, Code2, Globe, UserPlus, Trash2, ChevronRight,
+  Filter, ChevronDown
 } from "lucide-react";
 import { getAllChallenges, createChallengeTeam, createChallengeSubmission, getUserTeamForChallenge, getUserSubmissionForChallenge } from "@/app/actions/challenges";
 import { getMyCompanyPages } from "@/app/actions/company";
@@ -34,6 +35,9 @@ export default function ChallengesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("All");
   const [viewFilter, setViewFilter] = useState<"all" | "mine">("all");
+  const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [locationSearch, setLocationSearch] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [editChallenge, setEditChallenge] = useState<any>(null);
 
@@ -83,13 +87,21 @@ export default function ChallengesPage() {
   }, [session]);
 
   const companyIds = companies.map(c => c.id);
+  const activeFilterCount = [
+    statusFilter !== "All",
+    locationSearch !== "",
+    selectedTag !== "All",
+    searchTerm !== ""
+  ].filter(Boolean).length;
   const filteredChallenges = challenges.filter(c => {
-    const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = searchTerm === "" || c.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           c.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTag = selectedTag === "All" || c.category === selectedTag;
     const matchesView = viewFilter === "all" || companyIds.includes(c.companyPageId);
-    return matchesSearch && matchesTag && matchesView;
+    const matchesStatus = statusFilter === "All" || c.status === statusFilter;
+    const matchesLocation = locationSearch === "" || c.location.toLowerCase().includes(locationSearch.toLowerCase());
+    return matchesSearch && matchesTag && matchesView && matchesStatus && matchesLocation;
   });
 
   const loadUserTeamAndSubmission = async (challengeId: string) => {
@@ -299,8 +311,8 @@ export default function ChallengesPage() {
           </div>
         )}
 
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        {/* Search & Filter Toggle */}
+        <div className="flex flex-col md:flex-row md:items-start justify-between mb-4 gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
@@ -312,20 +324,97 @@ export default function ChallengesPage() {
             />
           </div>
 
-          <div className="flex items-center gap-1 bg-[#1d2226] p-1 rounded-lg border border-[#38434f] text-xs overflow-x-auto shrink-0">
-            {['All', 'Engineering', 'AI / ML', 'Hardware / Robotics', 'Data Science'].map(tag => (
-              <button key={tag} onClick={() => setSelectedTag(tag)}
-                className={`px-3 py-1.5 rounded-md font-semibold transition-all whitespace-nowrap ${
-                  selectedTag === tag 
-                    ? "bg-slate-800 text-violet-400 border border-violet-500/30 shadow-sm"
-                    : "text-slate-400 hover:text-white"
-                }`}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#1d2226] border border-[#38434f] text-xs font-bold text-slate-300 hover:text-white transition-all"
+            >
+              <Filter className="w-4 h-4" />
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="ml-0.5 w-5 h-5 rounded-full bg-violet-600 text-white text-[10px] flex items-center justify-center font-bold">
+                  {activeFilterCount}
+                </span>
+              )}
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFilters ? "rotate-180" : ""}`} />
+            </button>
+            {activeFilterCount > 0 && (
+              <button
+                onClick={() => { setStatusFilter("All"); setLocationSearch(""); setSelectedTag("All"); setSearchTerm(""); }}
+                className="flex items-center gap-1 px-3 py-2.5 rounded-xl bg-[#1d2226] border border-[#38434f] text-xs font-bold text-slate-400 hover:text-white transition-all"
               >
-                {tag}
+                <X className="w-3.5 h-3.5" />
+                Clear
               </button>
-            ))}
+            )}
           </div>
         </div>
+
+        {/* Expandable Filter Panel */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="overflow-hidden mb-8"
+            >
+              <div className="bg-[#1d2226] border border-[#38434f] rounded-2xl p-5 space-y-5">
+                {/* Status Filter */}
+                <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Status</p>
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {["All", "Open", "Closed", "Judging"].map(status => (
+                      <button key={status} onClick={() => setStatusFilter(status)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          statusFilter === status
+                            ? "bg-slate-800 text-violet-400 border border-violet-500/30 shadow-sm"
+                            : "text-slate-400 hover:text-white border border-transparent"
+                        }`}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Location Search */}
+                <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Location</p>
+                  <div className="relative max-w-xs">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                    <input
+                      type="text"
+                      placeholder="Filter by location..."
+                      value={locationSearch}
+                      onChange={(e) => setLocationSearch(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 rounded-lg bg-slate-900 border border-white/10 text-white placeholder-slate-500 text-xs font-semibold focus:outline-none focus:border-violet-500/50"
+                    />
+                  </div>
+                </div>
+
+                {/* Category Tags */}
+                <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Category</p>
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {['All', 'Engineering', 'AI / ML', 'Hardware / Robotics', 'Data Science'].map(tag => (
+                      <button key={tag} onClick={() => setSelectedTag(tag)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          selectedTag === tag
+                            ? "bg-slate-800 text-violet-400 border border-violet-500/30 shadow-sm"
+                            : "text-slate-400 hover:text-white border border-transparent"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Challenge List */}
         <div className="space-y-6 mb-16">

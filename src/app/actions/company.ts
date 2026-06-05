@@ -185,6 +185,85 @@ export async function getAllCompanyPages(limit = 20, offset = 0) {
   }
 }
 
+export async function updateCompanyPage(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) return { success: false, error: "Unauthorized" };
+
+    const email = session.user.email.toLowerCase().trim();
+    const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (!dbUsers.length) return { success: false, error: "User not found." };
+    const dbUser = dbUsers[0];
+
+    const pageId = formData.get("pageId") as string;
+    if (!pageId) return { success: false, error: "Page ID is required." };
+
+    // Verify ownership
+    const existing = await db.select().from(companyPages).where(eq(companyPages.id, pageId)).limit(1);
+    if (!existing.length) return { success: false, error: "Company page not found." };
+    if (existing[0].ownerId !== dbUser.id) return { success: false, error: "Not authorized to edit this page." };
+
+    const name = (formData.get("name") as string).trim();
+    const tagline = (formData.get("tagline") as string).trim();
+    const about = (formData.get("about") as string).trim();
+    const industry = formData.get("industry") as string;
+    const companySize = formData.get("companySize") as string;
+    const stage = formData.get("stage") as string;
+    const founded = (formData.get("founded") as string) || null;
+    const headquarters = (formData.get("headquarters") as string) || null;
+    const website = (formData.get("website") as string) || null;
+    const linkedinUrl = (formData.get("linkedinUrl") as string) || null;
+    const twitterUrl = (formData.get("twitterUrl") as string) || null;
+    const logoUrl = (formData.get("logoUrl") as string) || null;
+    const bannerUrl = (formData.get("bannerUrl") as string) || null;
+    const specialtiesRaw = formData.get("specialties") as string;
+    const specialties = specialtiesRaw ? JSON.parse(specialtiesRaw) : [];
+
+    // Re-generate slug if name changed
+    let slug = existing[0].slug;
+    const newBase = generateSlug(name);
+    if (newBase !== existing[0].slug.split("-")[0]) {
+      slug = newBase;
+      let suffix = 1;
+      while (true) {
+        const taken = await db
+          .select({ id: companyPages.id })
+          .from(companyPages)
+          .where(and(eq(companyPages.slug, slug), eq(companyPages.id, pageId)))
+          .limit(1);
+        if (!taken.length) break;
+        slug = `${newBase}-${suffix++}`;
+      }
+    }
+
+    await db
+      .update(companyPages)
+      .set({
+        name,
+        slug,
+        tagline,
+        about,
+        industry,
+        companySize,
+        stage,
+        founded,
+        headquarters,
+        website,
+        linkedinUrl,
+        twitterUrl,
+        logoUrl,
+        bannerUrl,
+        specialtiesJson: JSON.stringify(specialties),
+      })
+      .where(eq(companyPages.id, pageId));
+
+    return { success: true, slug, page: existing[0] };
+  } catch (err: any) {
+    console.error("updateCompanyPage error:", err);
+    return { success: false, error: err.message || "Failed to update company page." };
+  }
+}
+
 export async function getCompanySubmissions(slug: string) {
   try {
     const session = await getServerSession(authOptions);
