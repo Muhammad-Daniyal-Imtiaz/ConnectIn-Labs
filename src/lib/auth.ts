@@ -13,9 +13,7 @@ export const authOptions: NextAuthOptions = {
       // Skip OIDC discovery — openid-client uses Node.js http/https
       // which aren't available in Cloudflare Workers.
       wellKnown: null as unknown as undefined,
-      // Skip PKCE (requires openid-client generators) and ID token
-      // verification (needs crypto unavailable in Workers). Use
-      // plain state-based CSRF + userinfo endpoint instead.
+      // Skip PKCE (requires openid-client generators).
       checks: ["state"],
       idToken: false,
       authorization: {
@@ -27,8 +25,38 @@ export const authOptions: NextAuthOptions = {
           scope: "openid email profile",
         },
       },
-      token: "https://oauth2.googleapis.com/token",
-      userinfo: "https://openidconnect.googleapis.com/v1/userinfo",
+      // Provide custom token exchange using fetch instead of
+      // openid-client's Node.js http/https-based handler.
+      token: {
+        url: "https://oauth2.googleapis.com/token",
+        async request({ provider, params, checks }: any) {
+          const body = new URLSearchParams({
+            code: params.code,
+            client_id: provider.clientId,
+            client_secret: provider.clientSecret,
+            redirect_uri: provider.callbackUrl,
+            grant_type: "authorization_code",
+          });
+          if (checks?.code_verifier) body.set("code_verifier", checks.code_verifier);
+          const res = await fetch("https://oauth2.googleapis.com/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body,
+          });
+          return { tokens: await res.json() };
+        },
+      },
+      // Provide custom userinfo fetch using fetch instead of
+      // openid-client's Node.js http/https-based handler.
+      userinfo: {
+        url: "https://openidconnect.googleapis.com/v1/userinfo",
+        async request({ tokens }: any) {
+          const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+            headers: { Authorization: `Bearer ${tokens.access_token}` },
+          });
+          return res.json();
+        },
+      },
       profile(profile) {
         return {
           id: profile.sub,
