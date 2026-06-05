@@ -180,4 +180,34 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET || "indus-foundry-secret-key-123456",
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true,
+      },
+    },
+    callbackUrl: {
+      name: `__Secure-next-auth.callback-url`,
+      options: {
+        path: "/",
+        secure: true,
+        sameSite: "lax",
+      },
+    },
+    csrfToken: {
+      name: `__Secure-next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true,
+      },
+    },
+  },
+  // @ts-ignore: trustHost is valid NextAuth option
+  trustHost: true,
 };
