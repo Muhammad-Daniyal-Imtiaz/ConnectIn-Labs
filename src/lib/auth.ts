@@ -10,10 +10,14 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "placeholder-client-id",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "placeholder-client-secret",
-      // Set wellKnown to null to skip OIDC discovery via openid-client.
-      // openid-client uses Node.js http/https which are not fully available
-      // in Cloudflare Workers even with nodejs_compat.
+      // Skip OIDC discovery — openid-client uses Node.js http/https
+      // which aren't available in Cloudflare Workers.
       wellKnown: null as unknown as undefined,
+      // Skip PKCE (requires openid-client generators) and ID token
+      // verification (needs crypto unavailable in Workers). Use
+      // plain state-based CSRF + userinfo endpoint instead.
+      checks: ["state"],
+      idToken: false,
       authorization: {
         url: "https://accounts.google.com/o/oauth2/v2/auth",
         params: {
@@ -25,6 +29,14 @@ export const authOptions: NextAuthOptions = {
       },
       token: "https://oauth2.googleapis.com/token",
       userinfo: "https://openidconnect.googleapis.com/v1/userinfo",
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+        };
+      },
     }),
     CredentialsProvider({
       name: "Credentials",
