@@ -15,7 +15,10 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "10mb",
     },
+    // Exclude libsql client from edge bundling
+    externalPackages: ["@libsql/client"],
   },
 };
 
 export default nextConfig;
+
