@@ -1,12 +1,19 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { useTheme } from "@/context/ThemeContext";
-import { Palette, Moon, Waves, Sun, ChevronDown } from "lucide-react";
+import { Palette, Sun, Moon, Waves, Flame, Gem, Flower2, Droplets, Sparkles, Zap, ChevronDown } from "lucide-react";
 
 const THEMES = [
+  { id: "emerald" as const, label: "Emerald", icon: Moon, color: "#00a86b" },
   { id: "grey" as const, label: "Grey", icon: Moon, color: "#a1a1aa" },
   { id: "blue" as const, label: "Blue", icon: Waves, color: "#60a5fa" },
-  { id: "mirror" as const, label: "Mirror Black", icon: Sun, color: "#d4d4d8" },
+  { id: "mirror" as const, label: "Mirror Black", icon: Sparkles, color: "#d4d4d8" },
+  { id: "sunset" as const, label: "Sunset", icon: Flame, color: "#f97316" },
+  { id: "lavender" as const, label: "Lavender", icon: Gem, color: "#a78bfa" },
+  { id: "rose" as const, label: "Rose", icon: Flower2, color: "#f472b6" },
+  { id: "teal" as const, label: "Teal", icon: Droplets, color: "#2dd4bf" },
+  { id: "amber" as const, label: "Amber", icon: Sun, color: "#fbbf24" },
+  { id: "crimson" as const, label: "Crimson", icon: Zap, color: "#f87171" },
 ];
 
 export default function ThemeSwitcher() {
@@ -42,11 +49,11 @@ export default function ThemeSwitcher() {
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-1 w-44 rounded-lg border overflow-hidden z-50"
+          className="absolute right-0 top-full mt-1 w-48 rounded-lg border overflow-hidden z-50 max-h-80 overflow-y-auto"
           style={{
             background: "var(--bg-card)",
             borderColor: "var(--border-primary)",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
           }}
         >
           {THEMES.map((t) => {
@@ -56,7 +63,7 @@ export default function ThemeSwitcher() {
               <button
                 key={t.id}
                 onClick={() => { setTheme(t.id); setOpen(false); }}
-                className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-bold transition-all cursor-pointer"
+                className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold transition-all cursor-pointer"
                 style={{
                   background: active ? "var(--accent-glow)" : "transparent",
                   color: active ? t.color : "var(--text-secondary)",
@@ -68,11 +75,9 @@ export default function ThemeSwitcher() {
                   (e.currentTarget as HTMLElement).style.background = active ? "var(--accent-glow)" : "transparent";
                 }}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-3.5 h-3.5" />
                 <span>{t.label}</span>
-                {active && (
-                  <div className="ml-auto w-2 h-2 rounded-full" style={{ background: t.color }} />
-                )}
+                <div className="ml-auto w-2.5 h-2.5 rounded-full" style={{ background: t.color, opacity: active ? 1 : 0.3 }} />
               </button>
             );
           })}

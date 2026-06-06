@@ -1,11 +1,45 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ConnectIn — 3 Eye-Friendly Themes
-   Soft tones, low contrast, easy on eyes
+   ConnectIn — 10 Unique Eye-Friendly Themes
+   All dark, soft accents, mixed colors, easy on eyes
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Theme 1: Grey (Warm Charcoal) ─────────────────────────────────────────── */
+/* ── Theme 1: Emerald (Original Default) ───────────────────────────────────── */
+[data-theme="emerald"] {
+  --bg-primary: #050a0e;
+  --bg-secondary: #0c1219;
+  --bg-card: #0f1923;
+  --bg-card-hover: #142029;
+  --bg-elevated: #1a2735;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-primary: #00a86b;
+  --accent-secondary: #10b981;
+  --accent-glow: rgba(0, 168, 107, 0.12);
+  --accent-glow-strong: rgba(0, 168, 107, 0.25);
+  --border-primary: rgba(255, 255, 255, 0.06);
+  --border-accent: rgba(0, 168, 107, 0.2);
+  --border-hover: rgba(0, 168, 107, 0.35);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 8px 32px rgba(0, 168, 107, 0.08), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --hero-gradient: linear-gradient(135deg, #050a0e 0%, #0c1219 40%, #0f1923 100%);
+  --header-bg: rgba(5, 10, 14, 0.85);
+  --scrollbar-track: #0c1219;
+  --scrollbar-thumb: #1e293b;
+  --scrollbar-hover: #334155;
+  --input-bg: #0c1219;
+  --badge-bg: rgba(0, 168, 107, 0.1);
+  --badge-text: #34d399;
+  --badge-border: rgba(0, 168, 107, 0.2);
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+}
+
+/* ── Theme 2: Grey (Warm Charcoal) ─────────────────────────────────────────── */
 [data-theme="grey"] {
   --bg-primary: #18181b;
   --bg-secondary: #1f1f23;
@@ -39,7 +73,7 @@
   --info: #6366f1;
 }
 
-/* ── Theme 2: Blue (Twilight Cool) ─────────────────────────────────────────── */
+/* ── Theme 3: Blue (Twilight Cool) ─────────────────────────────────────────── */
 [data-theme="blue"] {
   --bg-primary: #0f172a;
   --bg-secondary: #131c31;
@@ -73,7 +107,7 @@
   --info: #60a5fa;
 }
 
-/* ── Theme 3: Mirror Black (Chrome & Charcoal) ─────────────────────────────── */
+/* ── Theme 4: Mirror Black (Chrome & Charcoal) ─────────────────────────────── */
 [data-theme="mirror"] {
   --bg-primary: #09090b;
   --bg-secondary: #111114;
@@ -104,6 +138,210 @@
   --success: #34d399;
   --warning: #fbbf24;
   --error: #f87171;
+  --info: #60a5fa;
+}
+
+/* ── Theme 5: Sunset (Warm Ember) ──────────────────────────────────────────── */
+[data-theme="sunset"] {
+  --bg-primary: #1a0f0a;
+  --bg-secondary: #211410;
+  --bg-card: #2a1b14;
+  --bg-card-hover: #332219;
+  --bg-elevated: #3d2a1f;
+  --text-primary: #e8ddd4;
+  --text-secondary: #b8a899;
+  --text-muted: #8a7a6b;
+  --accent-primary: #f97316;
+  --accent-secondary: #ea580c;
+  --accent-glow: rgba(249, 115, 22, 0.08);
+  --accent-glow-strong: rgba(249, 115, 22, 0.16);
+  --border-primary: rgba(255, 255, 255, 0.05);
+  --border-accent: rgba(249, 115, 22, 0.15);
+  --border-hover: rgba(249, 115, 22, 0.25);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 8px 24px rgba(249, 115, 22, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --hero-gradient: linear-gradient(135deg, #1a0f0a 0%, #211410 40%, #2a1b14 100%);
+  --header-bg: rgba(26, 15, 10, 0.88);
+  --scrollbar-track: #211410;
+  --scrollbar-thumb: #4a3228;
+  --scrollbar-hover: #6b4a3a;
+  --input-bg: #211410;
+  --badge-bg: rgba(249, 115, 22, 0.08);
+  --badge-text: #fb923c;
+  --badge-border: rgba(249, 115, 22, 0.15);
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #ef4444;
+  --info: #60a5fa;
+}
+
+/* ── Theme 6: Lavender (Soft Purple) ───────────────────────────────────────── */
+[data-theme="lavender"] {
+  --bg-primary: #13101f;
+  --bg-secondary: #1a1528;
+  --bg-card: #221c33;
+  --bg-card-hover: #2a233d;
+  --bg-elevated: #332b47;
+  --text-primary: #ddd5eb;
+  --text-secondary: #a89ec0;
+  --text-muted: #786e8f;
+  --accent-primary: #a78bfa;
+  --accent-secondary: #8b5cf6;
+  --accent-glow: rgba(167, 139, 250, 0.08);
+  --accent-glow-strong: rgba(167, 139, 250, 0.16);
+  --border-primary: rgba(255, 255, 255, 0.05);
+  --border-accent: rgba(167, 139, 250, 0.15);
+  --border-hover: rgba(167, 139, 250, 0.25);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 8px 24px rgba(167, 139, 250, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --hero-gradient: linear-gradient(135deg, #13101f 0%, #1a1528 40%, #221c33 100%);
+  --header-bg: rgba(19, 16, 31, 0.88);
+  --scrollbar-track: #1a1528;
+  --scrollbar-thumb: #3d3355;
+  --scrollbar-hover: #5a4d7a;
+  --input-bg: #1a1528;
+  --badge-bg: rgba(167, 139, 250, 0.08);
+  --badge-text: #c4b5fd;
+  --badge-border: rgba(167, 139, 250, 0.15);
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --info: #60a5fa;
+}
+
+/* ── Theme 7: Rose (Blush Dark) ────────────────────────────────────────────── */
+[data-theme="rose"] {
+  --bg-primary: #1a0f14;
+  --bg-secondary: #211319;
+  --bg-card: #2a1a22;
+  --bg-card-hover: #33202b;
+  --bg-elevated: #3d2835;
+  --text-primary: #ead5de;
+  --text-secondary: #bfa5b2;
+  --text-muted: #907888;
+  --accent-primary: #f472b6;
+  --accent-secondary: #ec4899;
+  --accent-glow: rgba(244, 114, 182, 0.08);
+  --accent-glow-strong: rgba(244, 114, 182, 0.16);
+  --border-primary: rgba(255, 255, 255, 0.05);
+  --border-accent: rgba(244, 114, 182, 0.15);
+  --border-hover: rgba(244, 114, 182, 0.25);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 8px 24px rgba(244, 114, 182, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --hero-gradient: linear-gradient(135deg, #1a0f14 0%, #211319 40%, #2a1a22 100%);
+  --header-bg: rgba(26, 15, 20, 0.88);
+  --scrollbar-track: #211319;
+  --scrollbar-thumb: #4a3040;
+  --scrollbar-hover: #6b4558;
+  --input-bg: #211319;
+  --badge-bg: rgba(244, 114, 182, 0.08);
+  --badge-text: #f9a8d4;
+  --badge-border: rgba(244, 114, 182, 0.15);
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #ef4444;
+  --info: #60a5fa;
+}
+
+/* ── Theme 8: Teal (Ocean Depth) ───────────────────────────────────────────── */
+[data-theme="teal"] {
+  --bg-primary: #0a1a1a;
+  --bg-secondary: #0f2222;
+  --bg-card: #142c2c;
+  --bg-card-hover: #193636;
+  --bg-elevated: #1f4040;
+  --text-primary: #ccddd8;
+  --text-secondary: #9ab0aa;
+  --text-muted: #6d857f;
+  --accent-primary: #2dd4bf;
+  --accent-secondary: #14b8a6;
+  --accent-glow: rgba(45, 212, 191, 0.08);
+  --accent-glow-strong: rgba(45, 212, 191, 0.16);
+  --border-primary: rgba(255, 255, 255, 0.05);
+  --border-accent: rgba(45, 212, 191, 0.15);
+  --border-hover: rgba(45, 212, 191, 0.25);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 8px 24px rgba(45, 212, 191, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --hero-gradient: linear-gradient(135deg, #0a1a1a 0%, #0f2222 40%, #142c2c 100%);
+  --header-bg: rgba(10, 26, 26, 0.88);
+  --scrollbar-track: #0f2222;
+  --scrollbar-thumb: #244a4a;
+  --scrollbar-hover: #2d6060;
+  --input-bg: #0f2222;
+  --badge-bg: rgba(45, 212, 191, 0.08);
+  --badge-text: #5eead4;
+  --badge-border: rgba(45, 212, 191, 0.15);
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --info: #60a5fa;
+}
+
+/* ── Theme 9: Amber (Golden Hour) ──────────────────────────────────────────── */
+[data-theme="amber"] {
+  --bg-primary: #1a1508;
+  --bg-secondary: #211b0c;
+  --bg-card: #2a2310;
+  --bg-card-hover: #332c14;
+  --bg-elevated: #3d3518;
+  --text-primary: #e8dfc4;
+  --text-secondary: #b8a87a;
+  --text-muted: #8a7d55;
+  --accent-primary: #fbbf24;
+  --accent-secondary: #f59e0b;
+  --accent-glow: rgba(251, 191, 36, 0.08);
+  --accent-glow-strong: rgba(251, 191, 36, 0.16);
+  --border-primary: rgba(255, 255, 255, 0.05);
+  --border-accent: rgba(251, 191, 36, 0.15);
+  --border-hover: rgba(251, 191, 36, 0.25);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 8px 24px rgba(251, 191, 36, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --hero-gradient: linear-gradient(135deg, #1a1508 0%, #211b0c 40%, #2a2310 100%);
+  --header-bg: rgba(26, 21, 8, 0.88);
+  --scrollbar-track: #211b0c;
+  --scrollbar-thumb: #4a4020;
+  --scrollbar-hover: #6b5a30;
+  --input-bg: #211b0c;
+  --badge-bg: rgba(251, 191, 36, 0.08);
+  --badge-text: #fde047;
+  --badge-border: rgba(251, 191, 36, 0.15);
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #ef4444;
+  --info: #60a5fa;
+}
+
+/* ── Theme 10: Crimson (Deep Red) ──────────────────────────────────────────── */
+[data-theme="crimson"] {
+  --bg-primary: #1a0a0a;
+  --bg-secondary: #210e0e;
+  --bg-card: #2a1414;
+  --bg-card-hover: #331a1a;
+  --bg-elevated: #3d2020;
+  --text-primary: #e8d0d0;
+  --text-secondary: #b89090;
+  --text-muted: #8a6868;
+  --accent-primary: #f87171;
+  --accent-secondary: #ef4444;
+  --accent-glow: rgba(248, 113, 113, 0.08);
+  --accent-glow-strong: rgba(248, 113, 113, 0.16);
+  --border-primary: rgba(255, 255, 255, 0.05);
+  --border-accent: rgba(248, 113, 113, 0.15);
+  --border-hover: rgba(248, 113, 113, 0.25);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 8px 24px rgba(248, 113, 113, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --hero-gradient: linear-gradient(135deg, #1a0a0a 0%, #210e0e 40%, #2a1414 100%);
+  --header-bg: rgba(26, 10, 10, 0.88);
+  --scrollbar-track: #210e0e;
+  --scrollbar-thumb: #4a2020;
+  --scrollbar-hover: #6b3030;
+  --input-bg: #210e0e;
+  --badge-bg: rgba(248, 113, 113, 0.08);
+  --badge-text: #fca5a5;
+  --badge-border: rgba(248, 113, 113, 0.15);
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #ef4444;
   --info: #60a5fa;
 }
 
