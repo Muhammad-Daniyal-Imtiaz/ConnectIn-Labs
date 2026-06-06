@@ -425,12 +425,12 @@ export default function Home() {
       <footer className="border-t border-white/5 bg-[#03060c] py-12 px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div className="md:col-span-2">
-            <span className="font-black text-lg tracking-wider text-white">INDUS FOUNDRY VENTURES</span>
+            <span className="font-black text-lg tracking-wider text-white">CONNECTIN</span>
             <p className="text-xs text-slate-400 mt-3 max-w-sm leading-relaxed">
               Pakistan's premier deep-tech startup, cofounder matching, and job placement engine. Solving the graduation unemployment paradox by bridging builders, venture capital, and local resources.
             </p>
             <p className="text-[10px] text-slate-500 mt-6">
-              © {new Date().getFullYear()} Indus Foundry Ventures. All Rights Reserved. Built with Next.js & Tailwind CSS.
+              © {new Date().getFullYear()} ConnectIn. All Rights Reserved.
             </p>
           </div>
 

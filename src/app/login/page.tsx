@@ -103,7 +103,7 @@ function LoginContent() {
               <Cpu className="w-5 h-5 group-hover:rotate-12 transition-all" />
             </div>
             <span className="text-sm font-black tracking-widest text-white uppercase font-mono">
-              Indus Foundry
+              ConnectIn
             </span>
           </Link>
           <h2 className="text-2xl font-black tracking-tight text-white uppercase">
@@ -267,7 +267,7 @@ function LoginContent() {
             </span>
           ) : (
             <span>
-              New to Indus Foundry?{" "}
+              New to ConnectIn?{" "}
               <button
                 onClick={() => {
                   setIsRegistering(true);

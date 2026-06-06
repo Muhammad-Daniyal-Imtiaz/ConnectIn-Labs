@@ -96,7 +96,7 @@ export default function OnboardingOverlay() {
               <div className="text-center mb-6">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#00a86b]/10 text-[#00a86b] font-mono text-[10px] font-bold border border-[#00a86b]/20 mb-3 uppercase tracking-widest">
                   <Sparkles className="w-3.5 h-3.5" />
-                  Welcome to Indus Foundry
+                  Welcome to ConnectIn
                 </span>
                 <h3 className="font-black text-2xl tracking-tight text-white">
                   Let's Set Up Your Profile

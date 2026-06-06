@@ -67,7 +67,7 @@ export default function TeamsPage() {
 
   const handleCofounderConnect = (builder: Builder) => {
     setSelectedBuilder(builder);
-    setBuilderChatMsg(`Salam ${builder.name.split(' ')[0]}! I saw your profile on Indus Foundry Ventures. I'm building in the ${builder.field} space and would love to chat about cofounding.`);
+    setBuilderChatMsg(`Salam ${builder.name.split(' ')[0]}! I saw your profile on ConnectIn. I'm building in the ${builder.field} space and would love to chat about cofounding.`);
     setChatSuccess(false);
   };
 

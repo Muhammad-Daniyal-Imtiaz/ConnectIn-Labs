@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Indus Foundry Ventures | Pakistan's Startup & Jobs Engine",
-  description: "Bridging the gap between 500,000+ yearly Pakistani graduates, venture capital funding, and corporate deep-tech partnerships. Forging cofounder teams and placements in AI, SaaS, robotics, semiconductors, and fintech.",
+  title: "ConnectIn | Pakistan's Startup & Jobs Engine",
+  description: "ConnectIn bridges the gap between 500,000+ yearly Pakistani graduates, venture capital funding, and corporate deep-tech partnerships. Forging cofounder teams and placements in AI, SaaS, robotics, semiconductors, and fintech.",
 };
 
 export default function RootLayout({
