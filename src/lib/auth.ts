@@ -145,20 +145,22 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user }: any) {
+    async jwt({ token, user, account }: any) {
       if (user) {
         token.id = user.id;
         token.role = user.role || "None";
         token.avatarUrl = user.image || user.avatarUrl;
       }
 
-      // Load latest user details from Turso DB to ensure sync
-      if (token.email) {
-        const dbUsers = await db.select().from(users).where(eq(users.email, token.email.toLowerCase().trim())).limit(1);
-        if (dbUsers.length > 0) {
-          token.id = dbUsers[0].id;
-          token.role = dbUsers[0].role;
-          token.avatarUrl = dbUsers[0].avatarUrl || token.avatarUrl;
+      if (account && token.id) {
+        try {
+          const dbUsers = await db.select().from(users).where(eq(users.id, token.id)).limit(1);
+          if (dbUsers.length > 0) {
+            token.role = dbUsers[0].role;
+            token.avatarUrl = dbUsers[0].avatarUrl || token.avatarUrl;
+          }
+        } catch {
+          // non-fatal
         }
       }
       return token;
@@ -180,34 +182,6 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET || "indus-foundry-secret-key-123456",
-  cookies: {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: true,
-      },
-    },
-    callbackUrl: {
-      name: `__Secure-next-auth.callback-url`,
-      options: {
-        path: "/",
-        secure: true,
-        sameSite: "lax",
-      },
-    },
-    csrfToken: {
-      name: `__Secure-next-auth.csrf-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: true,
-      },
-    },
-  },
   // @ts-ignore: trustHost is valid NextAuth option
   trustHost: true,
 };
