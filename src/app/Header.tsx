@@ -92,7 +92,7 @@ export default function Header() {
         {/* Logo — ConnectIn brand mark, like LinkedIn's header logo */}
         <Link href="/" className="flex items-center group shrink-0">
           <img
-            src="/connectin-logo.svg"
+            src="/connect-in.jpeg"
             alt="ConnectIn"
             className="h-9 w-auto group-hover:opacity-90 transition-opacity"
           />
