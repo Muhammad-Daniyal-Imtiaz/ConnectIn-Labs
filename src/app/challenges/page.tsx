@@ -223,7 +223,7 @@ export default function ChallengesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[var(--background)]">
-        <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
       </div>
     );
   }
@@ -257,15 +257,15 @@ export default function ChallengesPage() {
 
   return (
     <div className="relative min-h-screen bg-[var(--background)] text-[#f8fafc] py-12 px-6 overflow-hidden">
-      <div className="absolute top-[-10%] left-[-15%] w-[60%] h-[60%] rounded-full bg-violet-600/10 blur-[140px] pointer-events-none animate-pulse-glow"></div>
-      <div className="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-amber-500/5 blur-[140px] pointer-events-none"></div>
+      <div className="absolute top-[-10%] left-[-15%] w-[60%] h-[60%] rounded-full bg-[#00a86b]/6 blur-[140px] pointer-events-none animate-pulse-glow"></div>
+      <div className="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-[#2563eb]/5 blur-[140px] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 text-violet-400 font-mono text-[10px] font-bold border border-violet-500/20 mb-4">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-500/20 mb-4">
               <Target className="w-3.5 h-3.5" />
               MODULE 03 / COMPETITIVE ARENA
             </div>
@@ -284,7 +284,7 @@ export default function ChallengesPage() {
               setEditChallenge(null);
               setShowPostModal(true);
             }}
-            className="bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition-all shadow-lg shadow-violet-600/20 flex items-center gap-1.5 cursor-pointer shrink-0"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4" />
             Post a Challenge
@@ -301,7 +301,7 @@ export default function ChallengesPage() {
               <button key={tab.key} onClick={() => setViewFilter(tab.key)}
                 className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
                   viewFilter === tab.key
-                    ? "bg-violet-600 text-white shadow-lg shadow-violet-600/20"
+                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
                     : "text-slate-400 hover:text-white"
                 }`}
               >
@@ -320,7 +320,7 @@ export default function ChallengesPage() {
               placeholder="Search bottlenecks..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#1d2226] border border-[#38434f] text-white placeholder-slate-500 text-xs font-semibold focus:outline-none focus:border-violet-500/50"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#1d2226] border border-[#38434f] text-white placeholder-slate-500 text-xs font-semibold focus:outline-none focus:border-emerald-500/50"
             />
           </div>
 
@@ -332,7 +332,7 @@ export default function ChallengesPage() {
               <Filter className="w-4 h-4" />
               Filters
               {activeFilterCount > 0 && (
-                <span className="ml-0.5 w-5 h-5 rounded-full bg-violet-600 text-white text-[10px] flex items-center justify-center font-bold">
+                <span className="ml-0.5 w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">
                   {activeFilterCount}
                 </span>
               )}
@@ -369,7 +369,7 @@ export default function ChallengesPage() {
                       <button key={status} onClick={() => setStatusFilter(status)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                           statusFilter === status
-                            ? "bg-slate-800 text-violet-400 border border-violet-500/30 shadow-sm"
+                            ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-sm"
                             : "text-slate-400 hover:text-white border border-transparent"
                         }`}
                       >
@@ -389,7 +389,7 @@ export default function ChallengesPage() {
                       placeholder="Filter by location..."
                       value={locationSearch}
                       onChange={(e) => setLocationSearch(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 rounded-lg bg-slate-900 border border-white/10 text-white placeholder-slate-500 text-xs font-semibold focus:outline-none focus:border-violet-500/50"
+                      className="w-full pl-9 pr-4 py-2 rounded-lg bg-slate-900 border border-white/10 text-white placeholder-slate-500 text-xs font-semibold focus:outline-none focus:border-emerald-500/50"
                     />
                   </div>
                 </div>
@@ -402,7 +402,7 @@ export default function ChallengesPage() {
                       <button key={tag} onClick={() => setSelectedTag(tag)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                           selectedTag === tag
-                            ? "bg-slate-800 text-violet-400 border border-violet-500/30 shadow-sm"
+                            ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-sm"
                             : "text-slate-400 hover:text-white border border-transparent"
                         }`}
                       >
@@ -430,7 +430,7 @@ export default function ChallengesPage() {
               
               return (
                 <div key={challenge.id}
-                  className="bg-[#1d2226] p-6 rounded-2xl border border-[#38434f] hover:border-violet-500/30 transition-all flex flex-col md:flex-row justify-between gap-6 relative group"
+                  className="bg-[#1d2226] p-6 rounded-2xl border border-[#38434f] hover:border-emerald-500/30 transition-all flex flex-col md:flex-row justify-between gap-6 relative group"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -440,7 +440,7 @@ export default function ChallengesPage() {
                         <Building2 className="w-5 h-5 text-slate-400" />
                       )}
                       <span className="text-xs font-bold text-slate-300">{challenge.companyName}</span>
-                      <span className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full border border-violet-500/20 ml-2">
+                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 ml-2">
                         {challenge.category}
                       </span>
                       {challenge.status === "Open" ? (
@@ -455,13 +455,13 @@ export default function ChallengesPage() {
                     
                     <div className="flex flex-wrap gap-4 text-xs font-semibold text-slate-400">
                       <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-white/5">
-                        <Calendar className="w-3.5 h-3.5 text-violet-400" /> Duration: {challenge.duration}
+                        <Calendar className="w-3.5 h-3.5 text-emerald-400" /> Duration: {challenge.duration}
                       </div>
                       <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-white/5">
-                        <MapPin className="w-3.5 h-3.5 text-violet-400" /> {challenge.location}
+                        <MapPin className="w-3.5 h-3.5 text-emerald-400" /> {challenge.location}
                       </div>
                       <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-white/5">
-                        <Users className="w-3.5 h-3.5 text-violet-400" /> Team: {challenge.minTeamMembers}-{challenge.maxTeamMembers}
+                        <Users className="w-3.5 h-3.5 text-emerald-400" /> Team: {challenge.minTeamMembers}-{challenge.maxTeamMembers}
                       </div>
                     </div>
                   </div>
@@ -485,7 +485,7 @@ export default function ChallengesPage() {
                       )}
                       <button 
                         onClick={() => openCompeteFlow(challenge)}
-                        className={`py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-violet-600/20 ${isOwner ? "flex-1" : "w-full"}`}
+                        className={`py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/20 ${isOwner ? "flex-1" : "w-full"}`}
                       >
                         <Zap className="w-3.5 h-3.5 fill-current" /> Compete
                       </button>
@@ -510,27 +510,27 @@ export default function ChallengesPage() {
               className="w-full max-w-2xl bg-[#1d2226] border border-[#38434f] rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
             >
               {/* Header */}
-              <div className="relative px-6 py-5 border-b border-white/5 bg-gradient-to-r from-violet-500/10 to-transparent shrink-0">
+              <div className="relative px-6 py-5 border-b border-white/5 bg-gradient-to-r from-emerald-500/10 to-transparent shrink-0">
                 <button onClick={() => setCompetingChallenge(null)} className="absolute top-5 right-5 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
                   <X className="w-5 h-5" />
                 </button>
                 <div className="flex items-center gap-2 mb-2">
-                  <Zap className="w-6 h-6 text-violet-400 fill-current" />
+                  <Zap className="w-6 h-6 text-emerald-400 fill-current" />
                   <h2 className="text-xl font-black text-white">Enter Challenge</h2>
                 </div>
                 <p className="text-xs text-slate-400 font-medium">Compete in: <span className="text-white font-bold">{competingChallenge.title}</span></p>
                 
                 {/* Steps indicator */}
                 <div className="flex items-center gap-2 mt-4">
-                  <div className={`flex items-center gap-1.5 ${flowStep === "team" ? "text-violet-400" : "text-emerald-400"}`}>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${flowStep === "team" ? "bg-violet-500/20 border border-violet-500/40" : "bg-emerald-500/20 border border-emerald-500/40"}`}>
+                  <div className={`flex items-center gap-1.5 ${flowStep === "team" ? "text-emerald-400" : "text-emerald-400"}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${flowStep === "team" ? "bg-emerald-500/20 border border-emerald-500/40" : "bg-emerald-500/20 border border-emerald-500/40"}`}>
                       {flowStep === "submit" ? "✓" : "1"}
                     </div>
                     <span className="text-xs font-bold">Team Setup</span>
                   </div>
                   <div className="w-8 h-px bg-slate-700" />
-                  <div className={`flex items-center gap-1.5 ${flowStep === "submit" ? "text-violet-400" : "text-slate-500"}`}>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${flowStep === "submit" ? "bg-violet-500/20 border border-violet-500/40" : "bg-slate-800 border border-slate-700"}`}>
+                  <div className={`flex items-center gap-1.5 ${flowStep === "submit" ? "text-emerald-400" : "text-slate-500"}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${flowStep === "submit" ? "bg-emerald-500/20 border border-emerald-500/40" : "bg-slate-800 border border-slate-700"}`}>
                       2
                     </div>
                     <span className="text-xs font-bold">Submission</span>
@@ -552,7 +552,7 @@ export default function ChallengesPage() {
                         value={teamName}
                         onChange={e => setTeamName(e.target.value)}
                         placeholder="e.g. The Solvers"
-                        className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-violet-500/50 outline-none"
+                        className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-emerald-500/50 outline-none"
                       />
                     </div>
 
@@ -560,7 +560,7 @@ export default function ChallengesPage() {
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="text-xs font-bold text-slate-300">Team Members (up to 10)</label>
                         {members.length < 10 && (
-                          <button onClick={addMember} className="text-xs font-bold text-violet-400 hover:text-violet-300 flex items-center gap-1">
+                          <button onClick={addMember} className="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
                             <UserPlus className="w-3 h-3" /> Add Member
                           </button>
                         )}
@@ -579,26 +579,26 @@ export default function ChallengesPage() {
                                 placeholder="Full Name *"
                                 value={member.name}
                                 onChange={e => updateMember(i, "name", e.target.value)}
-                                className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-violet-500/50 outline-none"
+                                className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-emerald-500/50 outline-none"
                               />
                               <input
                                 placeholder="Email *"
                                 type="email"
                                 value={member.email}
                                 onChange={e => updateMember(i, "email", e.target.value)}
-                                className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-violet-500/50 outline-none"
+                                className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-emerald-500/50 outline-none"
                               />
                               <input
                                 placeholder="LinkedIn URL"
                                 value={member.linkedinUrl}
                                 onChange={e => updateMember(i, "linkedinUrl", e.target.value)}
-                                className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-violet-500/50 outline-none"
+                                className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-emerald-500/50 outline-none"
                               />
                               <input
                                 placeholder="Role (e.g. Developer, Designer)"
                                 value={member.role}
                                 onChange={e => updateMember(i, "role", e.target.value)}
-                                className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-violet-500/50 outline-none"
+                                className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-emerald-500/50 outline-none"
                               />
                             </div>
                           </div>
@@ -609,7 +609,7 @@ export default function ChallengesPage() {
                     <button
                       onClick={handleCreateTeam}
                       disabled={submittingTeam}
-                      className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-60 text-white text-xs font-black transition-all flex items-center justify-center gap-2 shadow-lg shadow-violet-600/20"
+                      className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white text-xs font-black transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
                     >
                       {submittingTeam ? <Loader2 className="w-4 h-4 animate-spin" /> : <><UserPlus className="w-4 h-4" /> Create Team & Continue</>}
                     </button>
@@ -625,7 +625,7 @@ export default function ChallengesPage() {
                         value={subTitle}
                         onChange={e => setSubTitle(e.target.value)}
                         placeholder="e.g. AI-Powered Traffic Optimization System"
-                        className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-violet-500/50 outline-none"
+                        className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-emerald-500/50 outline-none"
                       />
                     </div>
 
@@ -636,7 +636,7 @@ export default function ChallengesPage() {
                         value={subDesc}
                         onChange={e => setSubDesc(e.target.value)}
                         placeholder="Describe your approach, the solution you built, key outcomes, and any technical innovations..."
-                        className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-violet-500/50 outline-none resize-none leading-relaxed"
+                        className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-emerald-500/50 outline-none resize-none leading-relaxed"
                       />
                     </div>
 
@@ -647,7 +647,7 @@ export default function ChallengesPage() {
                           value={videoLink}
                           onChange={e => setVideoLink(e.target.value)}
                           placeholder="YouTube / Loom URL"
-                          className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:border-violet-500/50 outline-none"
+                          className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:border-emerald-500/50 outline-none"
                         />
                       </div>
                       <div>
@@ -656,7 +656,7 @@ export default function ChallengesPage() {
                           value={githubUrl}
                           onChange={e => setGithubUrl(e.target.value)}
                           placeholder="https://github.com/..."
-                          className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:border-violet-500/50 outline-none"
+                          className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:border-emerald-500/50 outline-none"
                         />
                       </div>
                       <div>
@@ -665,7 +665,7 @@ export default function ChallengesPage() {
                           value={liveDemoUrl}
                           onChange={e => setLiveDemoUrl(e.target.value)}
                           placeholder="https://yourapp.com"
-                          className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:border-violet-500/50 outline-none"
+                          className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:border-emerald-500/50 outline-none"
                         />
                       </div>
                       <div>
@@ -674,7 +674,7 @@ export default function ChallengesPage() {
                           value={techStack}
                           onChange={e => setTechStack(e.target.value)}
                           placeholder="e.g. Python, React, TensorFlow"
-                          className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:border-violet-500/50 outline-none"
+                          className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:border-emerald-500/50 outline-none"
                         />
                       </div>
                     </div>
@@ -683,7 +683,7 @@ export default function ChallengesPage() {
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="text-xs font-bold text-slate-300">Additional Links</label>
-                        <button onClick={addAdditionalLink} className="text-xs font-bold text-violet-400 hover:text-violet-300 flex items-center gap-1">
+                        <button onClick={addAdditionalLink} className="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
                           <Plus className="w-3 h-3" /> Add Link
                         </button>
                       </div>
@@ -693,13 +693,13 @@ export default function ChallengesPage() {
                             placeholder="Label (e.g. Deck, Demo)"
                             value={link.label}
                             onChange={e => updateAdditionalLink(i, "label", e.target.value)}
-                            className="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-violet-500/50 outline-none"
-                          />
-                          <input
-                            placeholder="URL"
-                            value={link.url}
-                            onChange={e => updateAdditionalLink(i, "url", e.target.value)}
-                            className="flex-[2] bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-violet-500/50 outline-none"
+                              className="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-emerald-500/50 outline-none"
+                            />
+                            <input
+                              placeholder="URL"
+                              value={link.url}
+                              onChange={e => updateAdditionalLink(i, "url", e.target.value)}
+                              className="flex-[2] bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-emerald-500/50 outline-none"
                           />
                           <button onClick={() => removeAdditionalLink(i)} className="text-red-400 hover:text-red-300"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>

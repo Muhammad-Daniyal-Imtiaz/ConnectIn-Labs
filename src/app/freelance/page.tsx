@@ -14,7 +14,8 @@ import {
   Check,
   CheckCircle2,
   AlertCircle,
-  Globe
+  Globe,
+  Loader2
 } from "lucide-react";
 
 import { freelanceProjectsData, startupCategories, FreelanceProject } from "../data";
@@ -138,8 +139,8 @@ export default function FreelancePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-white">Loading Freelance Projects...</div>
+      <div className="flex items-center justify-center min-h-screen bg-[var(--bg-primary)]">
+        <Loader2 className="w-8 h-8 animate-spin text-teal-500 mb-3" />
       </div>
     );
   }
@@ -218,8 +219,8 @@ export default function FreelancePage() {
           ) : (
             filteredProjects.map(project => (
               <div key={project.id} className="flex flex-col gap-2">
-                <div 
-                  className="glass-panel p-6 rounded-2xl border border-white/5 hover:border-teal-500/20 transition-all flex flex-col md:flex-row justify-between gap-6"
+                <div
+                  className="bg-[#1d2226] p-6 rounded-2xl border border-[#38434f] hover:border-teal-500/20 transition-all flex flex-col md:flex-row justify-between gap-6"
                 >
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -248,7 +249,7 @@ export default function FreelancePage() {
                   </div>
                 </div>
 
-                <div className="w-full md:w-64 bg-[#0b0f19]/80 p-5 rounded-2xl border border-white/5 flex flex-col justify-between shrink-0">
+                <div className="w-full md:w-64 bg-[#141b24] p-5 rounded-2xl border border-[#38434f] flex flex-col justify-between shrink-0">
                   <div>
                     <div className="flex justify-between items-start mb-2">
                       <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">PROJECT BUDGET</p>
