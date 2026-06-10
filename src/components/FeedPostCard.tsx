@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, MoreHorizontal, X, ThumbsUp, MessageSquare, Repeat2, Send, Globe2, Mail, Phone, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal, X, ThumbsUp, MessageSquare, Repeat2, Send, Globe2, Mail, Phone, User, Lightbulb, Rocket, DollarSign, Users, Building2, Handshake } from "lucide-react";
+
+const CATEGORY_STYLES: Record<string, { bg: string; text: string; border: string; icon: React.ElementType }> = {
+  "Idea":                  { bg: "bg-amber-500/10", text: "text-amber-400",  border: "border-amber-500/25",  icon: Lightbulb },
+  "MVP":                   { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/25", icon: Rocket },
+  "Investment Wanted":     { bg: "bg-yellow-500/10", text: "text-yellow-400", border: "border-yellow-500/25", icon: DollarSign },
+  "Partners Wanted":       { bg: "bg-cyan-500/10",  text: "text-cyan-400",  border: "border-cyan-500/25",   icon: Handshake },
+  "Startup Space Wanted":  { bg: "bg-indigo-500/10", text: "text-indigo-400", border: "border-indigo-500/25", icon: Building2 },
+  "Cofounder Wanted":      { bg: "bg-rose-500/10",  text: "text-rose-400",  border: "border-rose-500/25",   icon: Users },
+};
 
 export default function FeedPostCard({ post }: { post: any }) {
   const [currentImage, setCurrentImage] = useState(0);
@@ -21,6 +30,9 @@ export default function FeedPostCard({ post }: { post: any }) {
     return `${Math.floor(hours / 24)}d`;
   };
 
+  const catStyle = CATEGORY_STYLES[post.category] || { bg: "bg-slate-500/10", text: "text-slate-400", border: "border-slate-500/25", icon: null };
+  const CatIcon = catStyle.icon;
+
   return (
     <div className="bg-[#1d2226] border border-[#38434f] rounded-lg mb-2 overflow-hidden text-[#e9eaec] font-sans">
       {/* Header */}
@@ -32,8 +44,14 @@ export default function FeedPostCard({ post }: { post: any }) {
                {post.userName}
                <span className="text-[#8c959f] font-normal text-sm">• 1st</span>
              </span>
-             <span className="text-xs text-[#8c959f] mt-0.5 truncate max-w-[90%] block">{post.userRole} | {post.category}</span>
-             <div className="flex items-center text-xs text-[#8c959f] mt-0.5">
+             <span className="text-xs text-[#8c959f] mt-0.5">{post.userRole}</span>
+             {post.category && (
+               <span className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border w-fit ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}>
+                 {CatIcon && <CatIcon className="w-3 h-3" />}
+                 {post.category}
+               </span>
+             )}
+             <div className="flex items-center text-xs text-[#8c959f] mt-1">
                 <span>{timeAgo(post.createdAt)}</span>
                 <span className="mx-1">•</span>
                 <Globe2 className="w-3 h-3" />
