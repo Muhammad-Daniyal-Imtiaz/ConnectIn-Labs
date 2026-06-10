@@ -1,39 +1,14 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-type Theme = 
-  | "pakistan"
-  | "emerald" 
-  | "nordic" 
-  | "slate" 
-  | "lavender" 
-  | "sunset" 
-  | "rose" 
-  | "teal" 
-  | "amber" 
-  | "sand" 
-  | "sage" 
-  | "clay";
+type Theme = "pakistan" | "emerald";
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (t: Theme) => void;
 }
 
-const VALID_THEMES: Theme[] = [
-  "pakistan",
-  "emerald",
-  "nordic",
-  "slate",
-  "lavender",
-  "sunset",
-  "rose",
-  "teal",
-  "amber",
-  "sand",
-  "sage",
-  "clay"
-];
+const VALID_THEMES: Theme[] = ["pakistan", "emerald"];
 
 const ThemeContext = createContext<ThemeContextType>({ theme: "pakistan", setTheme: () => {} });
 
@@ -72,4 +47,3 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     </ThemeContext.Provider>
   );
 }
-
