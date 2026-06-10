@@ -1,11 +1,21 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { useTheme } from "@/context/ThemeContext";
-import { Palette, Sparkles, Moon, ChevronDown } from "lucide-react";
+import { Palette, Sun, Moon, Waves, Flame, Gem, Flower2, Droplets, Sparkles, Zap, ChevronDown } from "lucide-react";
 
 const THEMES = [
   { id: "pakistan" as const, label: "Pakistan Flag", icon: Sparkles, color: "#004124" },
   { id: "emerald" as const, label: "Emerald Accent", icon: Moon, color: "#10b981" },
+  { id: "nordic" as const, label: "Nordic Breeze", icon: Waves, color: "#38bdf8" },
+  { id: "slate" as const, label: "Sleek Slate", icon: Moon, color: "#94a3b8" },
+  { id: "lavender" as const, label: "Dreamy Lavender", icon: Gem, color: "#c084fc" },
+  { id: "sunset" as const, label: "Terracotta Sunset", icon: Flame, color: "#fb923c" },
+  { id: "rose" as const, label: "Blush Rose", icon: Flower2, color: "#f472b6" },
+  { id: "teal" as const, label: "Ocean Teal", icon: Droplets, color: "#2dd4bf" },
+  { id: "amber" as const, label: "Golden Amber", icon: Sun, color: "#fbbf24" },
+  { id: "sand" as const, label: "Desert Sand", icon: Sun, color: "#f59e0b" },
+  { id: "sage" as const, label: "Mist Sage", icon: Sparkles, color: "#a7f3d0" },
+  { id: "clay" as const, label: "Earthy Clay", icon: Zap, color: "#f87171" },
 ];
 
 export default function ThemeSwitcher() {
@@ -41,7 +51,7 @@ export default function ThemeSwitcher() {
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-1 w-48 rounded-lg border overflow-hidden z-50"
+          className="absolute right-0 top-full mt-1 w-48 rounded-lg border overflow-hidden z-50 max-h-80 overflow-y-auto"
           style={{
             background: "var(--bg-card)",
             borderColor: "var(--border-primary)",
