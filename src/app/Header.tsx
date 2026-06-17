@@ -90,11 +90,12 @@ export default function Header() {
     >
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
         {/* Logo — ConnectIn brand mark */}
-        <Link href="/" className="flex items-center group shrink-0 h-12">
+        <Link href="/" className="flex items-center group shrink-0">
           <img
             src="/Connectin.webp"
             alt="ConnectIn"
-            className="h-full w-auto object-contain group-hover:scale-105 transition-all duration-300"
+            className="h-14 w-auto object-contain group-hover:scale-105 transition-all duration-300"
+            style={{ minWidth: '180px' }}
           />
         </Link>
 

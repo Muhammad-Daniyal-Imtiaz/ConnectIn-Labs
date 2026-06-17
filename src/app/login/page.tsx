@@ -102,7 +102,8 @@ function LoginContent() {
             <img
               src="/Connectin.webp"
               alt="ConnectIn"
-              className="h-16 w-auto object-contain group-hover:scale-105 transition-all duration-300"
+              className="h-20 w-auto object-contain group-hover:scale-105 transition-all duration-300"
+              style={{ minWidth: '200px' }}
             />
           </Link>
           <h2 className="text-2xl font-black tracking-tight text-white uppercase">

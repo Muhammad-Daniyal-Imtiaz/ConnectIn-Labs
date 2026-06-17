@@ -98,7 +98,8 @@ export default function OnboardingOverlay() {
                   <img
                     src="/Connectin.webp"
                     alt="ConnectIn"
-                    className="h-16 w-auto object-contain"
+                    className="h-20 w-auto object-contain"
+                    style={{ minWidth: '200px' }}
                   />
                 </div>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#00a86b]/10 text-[#00a86b] font-mono text-[10px] font-bold border border-[#00a86b]/20 mb-3 uppercase tracking-widest">
