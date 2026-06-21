@@ -319,6 +319,23 @@ export const challengeSubmissions = sqliteTable(
   })
 );
 
+// ─── Post Likes ──────────────────────────────────────────────────────────────
+export const postLikes = sqliteTable(
+  "post_likes",
+  {
+    postId: text("post_id").notNull(), // FK → posts.id
+    userId: text("user_id").notNull(), // FK → users.id
+    userName: text("user_name").notNull(),
+    userAvatar: text("user_avatar").notNull(),
+    ...timestamps,
+  },
+  (t) => ({
+    uniqueLike: uniqueIndex("post_likes_unique_idx").on(t.postId, t.userId),
+    postIdx: index("post_likes_post_idx").on(t.postId),
+    userIdx: index("post_likes_user_idx").on(t.userId),
+  })
+);
+
 // ─── Type exports ─────────────────────────────────────────────────────────────
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -355,3 +372,6 @@ export type NewChallengeTeam = typeof challengeTeams.$inferInsert;
 
 export type ChallengeSubmission = typeof challengeSubmissions.$inferSelect;
 export type NewChallengeSubmission = typeof challengeSubmissions.$inferInsert;
+
+export type PostLike = typeof postLikes.$inferSelect;
+export type NewPostLike = typeof postLikes.$inferInsert;

@@ -3,11 +3,19 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
-import { posts, users, profiles } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { posts, users, profiles, postLikes } from "@/db/schema";
+import { eq, desc, count } from "drizzle-orm";
 
 export async function getPosts() {
   try {
+    const session = await getServerSession(authOptions);
+    let currentUserId: string | null = null;
+    if (session?.user?.email) {
+      const email = session.user.email.toLowerCase().trim();
+      const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      if (dbUsers.length > 0) currentUserId = dbUsers[0].id;
+    }
+
     const list = await db
       .select({
         post: posts,
@@ -19,14 +27,32 @@ export async function getPosts() {
       .leftJoin(users, eq(posts.userId, users.id))
       .orderBy(desc(posts.createdAt));
 
-    const formattedPosts = list.map(({ post, profile, user }) => {
+    const formattedPosts = await Promise.all(list.map(async ({ post, profile, user }) => {
+      const likeCountResult = await db
+        .select({ value: count() })
+        .from(postLikes)
+        .where(eq(postLikes.postId, post.id));
+
+      let likedByMe = false;
+      if (currentUserId) {
+        const myLike = await db
+          .select()
+          .from(postLikes)
+          .where(eq(postLikes.postId, post.id))
+          .where(eq(postLikes.userId, currentUserId))
+          .limit(1);
+        likedByMe = myLike.length > 0;
+      }
+
       return {
         ...post,
         contactEmail: post.showContactEmail ? user?.email : null,
         contactPhone: post.showContactPhone ? profile?.phone : null,
         contactCountry: post.showContactCountry ? profile?.country : null,
+        likeCount: likeCountResult[0]?.value || 0,
+        likedByMe,
       };
-    });
+    }));
 
     return { success: true, posts: formattedPosts };
   } catch (error) {
@@ -117,5 +143,75 @@ export async function createPost(formData: FormData) {
   } catch (error: any) {
     console.error("Error creating post:", error);
     return { success: false, error: error.message || "Failed to submit post." };
+  }
+}
+
+export async function toggleLike(postId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const email = session.user.email?.toLowerCase().trim() || "";
+    const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (dbUsers.length === 0) {
+      return { success: false, error: "User not found." };
+    }
+    const dbUser = dbUsers[0];
+
+    const existing = await db
+      .select()
+      .from(postLikes)
+      .where(eq(postLikes.postId, postId))
+      .where(eq(postLikes.userId, dbUser.id))
+      .limit(1);
+
+    if (existing.length > 0) {
+      await db
+        .delete(postLikes)
+        .where(eq(postLikes.postId, postId))
+        .where(eq(postLikes.userId, dbUser.id));
+    } else {
+      await db.insert(postLikes).values({
+        postId,
+        userId: dbUser.id,
+        userName: dbUser.name,
+        userAvatar: dbUser.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(dbUser.name)}`,
+      });
+    }
+
+    const likeCount = await db
+      .select({ value: count() })
+      .from(postLikes)
+      .where(eq(postLikes.postId, postId));
+
+    return {
+      success: true,
+      liked: existing.length === 0,
+      likeCount: likeCount[0]?.value || 0,
+    };
+  } catch (error: any) {
+    console.error("Error toggling like:", error);
+    return { success: false, error: error.message || "Failed to toggle like." };
+  }
+}
+
+export async function getPostLikes(postId: string) {
+  try {
+    const likes = await db
+      .select({
+        userId: postLikes.userId,
+        userName: postLikes.userName,
+        userAvatar: postLikes.userAvatar,
+      })
+      .from(postLikes)
+      .where(eq(postLikes.postId, postId))
+      .orderBy(desc(postLikes.createdAt));
+
+    return { success: true, likes };
+  } catch (error: any) {
+    console.error("Error getting post likes:", error);
+    return { success: false, error: error.message || "Failed to get likes." };
   }
 }

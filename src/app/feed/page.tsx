@@ -530,11 +530,19 @@ export default function FeedPage() {
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                <AnimatePresence>
-                  {filteredPosts.map((post) => (
-                    <FeedPostCard key={post.id} post={post} />
-                  ))}
-                </AnimatePresence>
+                    <AnimatePresence>
+                      {filteredPosts.map((post) => (
+                        <FeedPostCard
+                          key={post.id}
+                          post={post}
+                          onLikeUpdated={(postId, likeCount, likedByMe) => {
+                            setPostsList(prev => prev.map(p =>
+                              p.id === postId ? { ...p, likeCount, likedByMe } : p
+                            ));
+                          }}
+                        />
+                      ))}
+                    </AnimatePresence>
               </div>
             )}
           </div>

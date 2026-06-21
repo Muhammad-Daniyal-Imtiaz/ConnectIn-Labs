@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, MoreHorizontal, X, ThumbsUp, MessageSquare, Repeat2, Send, Globe2, Mail, Phone, User, Lightbulb, Rocket, DollarSign, Users, Building2, Handshake } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal, X, ThumbsUp, MessageSquare, Repeat2, Send, Globe2, Mail, Phone, User, Lightbulb, Rocket, DollarSign, Users, Building2, Handshake, Loader2 } from "lucide-react";
+import { toggleLike, getPostLikes } from "@/app/actions/posts";
 
 const CATEGORY_STYLES: Record<string, { bg: string; text: string; border: string; icon: React.ElementType }> = {
   "Idea":                  { bg: "bg-amber-500/10", text: "text-amber-400",  border: "border-amber-500/25",  icon: Lightbulb },
@@ -12,9 +13,15 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string; border: string
   "Cofounder Wanted":      { bg: "bg-rose-500/10",  text: "text-rose-400",  border: "border-rose-500/25",   icon: Users },
 };
 
-export default function FeedPostCard({ post }: { post: any }) {
+export default function FeedPostCard({ post, onLikeUpdated }: { post: any; onLikeUpdated?: (postId: string, likeCount: number, likedByMe: boolean) => void }) {
   const [currentImage, setCurrentImage] = useState(0);
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(post.likedByMe || false);
+  const [likeCount, setLikeCount] = useState(post.likeCount || 0);
+  const [liking, setLiking] = useState(false);
+  const [showLikers, setShowLikers] = useState(false);
+  const [likers, setLikers] = useState<{ userId: string; userName: string; userAvatar: string }[]>([]);
+  const [loadingLikers, setLoadingLikers] = useState(false);
+
   let imgs: string[] = [];
   try {
     imgs = JSON.parse(post.imagesJson || "[]");
@@ -32,6 +39,42 @@ export default function FeedPostCard({ post }: { post: any }) {
 
   const catStyle = CATEGORY_STYLES[post.category] || { bg: "bg-slate-500/10", text: "text-slate-400", border: "border-slate-500/25", icon: null };
   const CatIcon = catStyle.icon;
+
+  async function handleLike() {
+    if (liking) return;
+    setLiking(true);
+    try {
+      const res = await toggleLike(post.id);
+      if (res.success) {
+        setLiked(res.liked);
+        setLikeCount(res.likeCount);
+        onLikeUpdated?.(post.id, res.likeCount, res.liked);
+      }
+    } catch (e) {
+      console.error("Failed to toggle like:", e);
+    } finally {
+      setLiking(false);
+    }
+  }
+
+  async function handleShowLikers() {
+    if (showLikers) {
+      setShowLikers(false);
+      return;
+    }
+    setLoadingLikers(true);
+    try {
+      const res = await getPostLikes(post.id);
+      if (res.success) {
+        setLikers(res.likes);
+      }
+    } catch (e) {
+      console.error("Failed to load likers:", e);
+    } finally {
+      setLoadingLikers(false);
+      setShowLikers(true);
+    }
+  }
 
   return (
     <div className="bg-[#1d2226] border border-[#38434f] rounded-lg mb-2 overflow-hidden text-[#e9eaec] font-sans">
@@ -115,31 +158,90 @@ export default function FeedPostCard({ post }: { post: any }) {
         </div>
       )}
 
+      {/* Like Count & Likers Dropdown */}
+      {likeCount > 0 && (
+        <div className="relative mx-4 mt-2">
+          <button
+            onClick={handleShowLikers}
+            className="flex items-center gap-1.5 text-xs text-[#8c959f] hover:text-[#0a66c2] hover:underline transition-colors cursor-pointer"
+          >
+            <div className="flex -space-x-1">
+              <div className="w-[16px] h-[16px] rounded-full bg-[#0a66c2] flex items-center justify-center ring-[1.5px] ring-[#1d2226]">
+                <ThumbsUp className="w-2 h-2 text-white fill-white" />
+              </div>
+            </div>
+            <span>{likeCount}</span>
+          </button>
+
+          {/* Likers Dropdown */}
+          {showLikers && (
+            <div className="absolute left-0 top-full mt-1 w-64 bg-[#1d2226] border border-[#38434f] rounded-lg shadow-2xl z-50 overflow-hidden">
+              <div className="p-3 border-b border-[#38434f]">
+                <p className="text-xs font-bold text-white">{likeCount} {likeCount === 1 ? "Like" : "Likes"}</p>
+              </div>
+              <div className="max-h-60 overflow-y-auto">
+                {loadingLikers ? (
+                  <div className="p-4 flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                  </div>
+                ) : likers.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-[#8c959f]">No likes yet</div>
+                ) : (
+                  likers.map((liker) => (
+                    <div key={liker.userId} className="flex items-center gap-2.5 px-3 py-2 hover:bg-[#38434f] transition-colors">
+                      <img
+                        src={liker.userAvatar}
+                        alt={liker.userName}
+                        className="w-7 h-7 rounded-full object-cover"
+                      />
+                      <span className="text-xs font-semibold text-white truncate">{liker.userName}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+              <button
+                onClick={() => setShowLikers(false)}
+                className="w-full p-2 text-center text-[10px] font-bold text-[#8c959f] hover:text-white border-t border-[#38434f] transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Social Stats */}
-      <div className="px-4 py-2 flex items-center justify-between text-[13px] text-[#8c959f] border-b border-[#38434f] mx-2">
+      <div className="px-4 py-2 flex items-center justify-between text-[13px] text-[#8c959f] border-b border-[#38434f] mx-2 mt-1">
          <div className="flex items-center gap-1.5">
-           <div className="flex -space-x-1">
-             <div className="w-[18px] h-[18px] rounded-full bg-[#0a66c2] flex items-center justify-center ring-[1.5px] ring-[#1d2226]">
-               <ThumbsUp className="w-2.5 h-2.5 text-white fill-white" />
+           {likeCount > 0 && (
+             <div className="flex -space-x-1">
+               <div className="w-[18px] h-[18px] rounded-full bg-[#0a66c2] flex items-center justify-center ring-[1.5px] ring-[#1d2226]">
+                 <ThumbsUp className="w-2.5 h-2.5 text-white fill-white" />
+               </div>
              </div>
-           </div>
-           <span className="hover:text-[#0a66c2] cursor-pointer hover:underline">{Math.floor(Math.random() * 50) + 5}</span>
+           )}
+           {likeCount > 0 && <span>{likeCount}</span>}
          </div>
          <div className="flex gap-2">
-            <span className="hover:text-[#0a66c2] cursor-pointer hover:underline">{Math.floor(Math.random() * 20)} comments</span>
+            <span className="hover:text-[#0a66c2] cursor-pointer hover:underline">0 comments</span>
             <span>•</span>
-            <span className="hover:text-[#0a66c2] cursor-pointer hover:underline">{Math.floor(Math.random() * 10)} reposts</span>
+            <span className="hover:text-[#0a66c2] cursor-pointer hover:underline">0 reposts</span>
          </div>
       </div>
 
       {/* Action Buttons */}
       <div className="px-2 py-1 flex items-center justify-between text-sm font-semibold text-[#8c959f]">
          <button 
-           onClick={() => setLiked(!liked)} 
-           className={`flex-1 flex items-center justify-center gap-2 py-3 mx-0.5 rounded-md transition-colors cursor-pointer ${liked ? "text-[#0a66c2]" : "hover:bg-[#38434f] hover:text-[#e9eaec]"}`}
+           onClick={handleLike}
+           disabled={liking}
+           className={`flex-1 flex items-center justify-center gap-2 py-3 mx-0.5 rounded-md transition-colors cursor-pointer ${liked ? "text-[#0a66c2]" : "hover:bg-[#38434f] hover:text-[#e9eaec]"} ${liking ? "opacity-60" : ""}`}
          >
-           <ThumbsUp className={`w-[18px] h-[18px] ${liked ? "fill-[#0a66c2] text-[#0a66c2]" : ""}`} />
-           Like
+           {liking ? (
+             <Loader2 className="w-[18px] h-[18px] animate-spin" />
+           ) : (
+             <ThumbsUp className={`w-[18px] h-[18px] ${liked ? "fill-[#0a66c2] text-[#0a66c2]" : ""}`} />
+           )}
+           {liked ? "Liked" : "Like"}
          </button>
          <button className="flex-1 flex items-center justify-center gap-2 py-3 mx-0.5 rounded-md hover:bg-[#38434f] hover:text-[#e9eaec] transition-colors cursor-pointer">
            <MessageSquare className="w-[18px] h-[18px]" />
