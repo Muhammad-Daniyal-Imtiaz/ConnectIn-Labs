@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { ChevronLeft, ChevronRight, MoreHorizontal, X, ThumbsUp, MessageSquare, Repeat2, Send, Globe2, Mail, Phone, User, Lightbulb, Rocket, DollarSign, Users, Building2, Handshake, Loader2 } from "lucide-react";
 import { toggleLike, getPostLikes } from "@/app/actions/posts";
 
@@ -26,9 +27,6 @@ export default function FeedPostCard({ post, onLikeUpdated }: { post: any; onLik
   try {
     imgs = JSON.parse(post.imagesJson || "[]");
   } catch (e) {}
-
-  const nextImage = () => setCurrentImage((p) => Math.min(p + 1, imgs.length - 1));
-  const prevImage = () => setCurrentImage((p) => Math.max(p - 1, 0));
 
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -107,13 +105,13 @@ export default function FeedPostCard({ post, onLikeUpdated }: { post: any; onLik
         </div>
       </div>
 
-      {/* Body text */}
-      <div className="px-4 py-2 text-sm leading-relaxed text-[#e9eaec]">
+      {/* Body text — clickable to post detail */}
+      <Link href={`/feed/${post.id}`} className="block px-4 py-2 text-sm leading-relaxed text-[#e9eaec] hover:bg-white/[0.02] transition-colors cursor-pointer">
          <p className="whitespace-pre-wrap">
            {post.title ? <span className="font-bold block mb-1 text-[15px]">{post.title}</span> : null}
            {post.content}
          </p>
-      </div>
+      </Link>
 
       {/* Contact Info Block */}
       {(post.showContactEmail || post.showContactPhone || post.showContactCountry) && (
@@ -133,20 +131,20 @@ export default function FeedPostCard({ post, onLikeUpdated }: { post: any; onLik
         </div>
       )}
 
-      {/* Images Carousel - LinkedIn Style */}
+      {/* Images Carousel - LinkedIn Style — clickable to post detail */}
       {imgs.length > 0 && (
-        <div className="relative w-full bg-[#1b1f23] flex items-center justify-center mt-2 group/carousel">
+        <Link href={`/feed/${post.id}`} className="block relative w-full bg-[#1b1f23] flex items-center justify-center mt-2 group/carousel cursor-pointer">
           <img src={imgs[currentImage]} alt="Post media" className="max-h-[500px] object-contain w-full" />
           
           {imgs.length > 1 && (
             <>
               {currentImage > 0 && (
-                 <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 text-white opacity-0 group-hover/carousel:opacity-100 hover:bg-black/90 transition-all cursor-pointer border border-white/20 z-10 shadow-lg shadow-black/50">
+                 <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentImage(p => p - 1); }} className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 text-white opacity-0 group-hover/carousel:opacity-100 hover:bg-black/90 transition-all cursor-pointer border border-white/20 z-10 shadow-lg shadow-black/50">
                    <ChevronLeft className="w-5 h-5" />
                  </button>
               )}
               {currentImage < imgs.length - 1 && (
-                 <button onClick={nextImage} className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 text-white opacity-0 group-hover/carousel:opacity-100 hover:bg-black/90 transition-all cursor-pointer border border-white/20 z-10 shadow-lg shadow-black/50">
+                 <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentImage(p => p + 1); }} className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 text-white opacity-0 group-hover/carousel:opacity-100 hover:bg-black/90 transition-all cursor-pointer border border-white/20 z-10 shadow-lg shadow-black/50">
                    <ChevronRight className="w-5 h-5" />
                  </button>
               )}
@@ -155,7 +153,7 @@ export default function FeedPostCard({ post, onLikeUpdated }: { post: any; onLik
               </div>
             </>
           )}
-        </div>
+        </Link>
       )}
 
       {/* Like Count & Likers Dropdown */}

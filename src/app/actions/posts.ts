@@ -6,6 +6,78 @@ import { db } from "@/db";
 import { posts, users, profiles, postLikes } from "@/db/schema";
 import { eq, desc, count } from "drizzle-orm";
 
+export async function getPostById(postId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    let currentUserId: string | null = null;
+    if (session?.user?.email) {
+      const email = session.user.email.toLowerCase().trim();
+      const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      if (dbUsers.length > 0) currentUserId = dbUsers[0].id;
+    }
+
+    const result = await db
+      .select({
+        post: posts,
+        profile: profiles,
+        user: users,
+      })
+      .from(posts)
+      .leftJoin(profiles, eq(posts.userId, profiles.userId))
+      .leftJoin(users, eq(posts.userId, users.id))
+      .where(eq(posts.id, postId))
+      .limit(1);
+
+    if (result.length === 0) {
+      return { success: false, error: "Post not found." };
+    }
+
+    const { post, profile, user } = result[0];
+
+    const likeCountResult = await db
+      .select({ value: count() })
+      .from(postLikes)
+      .where(eq(postLikes.postId, postId));
+
+    let likedByMe = false;
+    if (currentUserId) {
+      const myLike = await db
+        .select()
+        .from(postLikes)
+        .where(eq(postLikes.postId, postId))
+        .where(eq(postLikes.userId, currentUserId))
+        .limit(1);
+      likedByMe = myLike.length > 0;
+    }
+
+    const likers = await db
+      .select({
+        userId: postLikes.userId,
+        userName: postLikes.userName,
+        userAvatar: postLikes.userAvatar,
+      })
+      .from(postLikes)
+      .where(eq(postLikes.postId, postId))
+      .orderBy(desc(postLikes.createdAt));
+
+    return {
+      success: true,
+      post: {
+        ...post,
+        contactEmail: post.showContactEmail ? user?.email : null,
+        contactPhone: post.showContactPhone ? profile?.phone : null,
+        contactCountry: post.showContactCountry ? profile?.country : null,
+        likeCount: likeCountResult[0]?.value || 0,
+        likedByMe,
+        likers,
+      },
+    };
+  } catch (error: any) {
+    console.error("Error loading post:", error);
+    return { success: false, error: "Failed to load post." };
+  }
+}
+
 export async function getPosts() {
   try {
     const session = await getServerSession(authOptions);
