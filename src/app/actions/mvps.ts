@@ -4,10 +4,12 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { mvps, users, profiles } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, lt } from "drizzle-orm";
 
-export async function getMvps() {
+export async function getMvps(limit = 10, cursor?: string) {
   try {
+    const whereClause = cursor ? lt(mvps.createdAt, cursor) : undefined;
+
     const list = await db
       .select({
         mvp: mvps,
@@ -17,16 +19,22 @@ export async function getMvps() {
       .from(mvps)
       .leftJoin(profiles, eq(mvps.userId, profiles.userId))
       .leftJoin(users, eq(mvps.userId, users.id))
-      .orderBy(desc(mvps.createdAt));
+      .where(whereClause)
+      .orderBy(desc(mvps.createdAt))
+      .limit(limit + 1);
 
-    const formattedMvps = list.map(({ mvp }) => {
+    const hasMore = list.length > limit;
+    const items = hasMore ? list.slice(0, limit) : list;
+    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].mvp.createdAt : null;
+
+    const formattedMvps = items.map(({ mvp }) => {
       return {
         ...mvp,
         techStack: mvp.techStack ? mvp.techStack.split(",").map(t => t.trim()).filter(Boolean) : [],
       };
     });
 
-    return { success: true, mvps: formattedMvps };
+    return { success: true, mvps: formattedMvps, nextCursor, hasMore };
   } catch (error) {
     console.error("Error loading mvps:", error);
     return { success: false, error: "Failed to load mvps from database." };

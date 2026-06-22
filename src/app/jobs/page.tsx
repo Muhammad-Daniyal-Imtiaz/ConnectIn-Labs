@@ -60,17 +60,22 @@ export default function JobsPage() {
   const [postModalOpen, setPostModalOpen] = useState(false);
   const [editJob, setEditJob] = useState<any>(null);
   const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [jobsCursor, setJobsCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreJobs, setHasMoreJobs] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       const [jobsRes, companyRes, appsRes] = await Promise.all([
-        getAllJobs(),
+        getAllJobs(undefined, 10),
         session ? getMyCompanyPages() : Promise.resolve({ success: true, pages: [] }),
         session ? getMyApplications() : Promise.resolve({ success: true, applications: [] }),
       ]);
       if (jobsRes.success) {
         setJobs(jobsRes.jobs);
+        setJobsCursor(jobsRes.nextCursor ?? null);
+        setHasMoreJobs(jobsRes.hasMore ?? false);
         if (jobsRes.jobs.length > 0) setSelectedJob(jobsRes.jobs[0]);
       }
       if (companyRes.success) setMyCompanies(companyRes.pages || []);
@@ -123,6 +128,23 @@ export default function JobsPage() {
   const clearFilters = () => {
     setIndustry("All"); setExpLevel("All"); setEmpType("All"); setLocType("All");
     setPostedRange("All"); setSalaryMin(""); setSalaryMax(""); setSkillFilter(""); setSearch("");
+  };
+
+  const loadMoreJobs = async () => {
+    if (!jobsCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const jobsRes = await getAllJobs(undefined, 10, jobsCursor);
+      if (jobsRes.success && jobsRes.jobs) {
+        setJobs(prev => [...prev, ...jobsRes.jobs]);
+        setJobsCursor(jobsRes.nextCursor ?? null);
+        setHasMoreJobs(jobsRes.hasMore ?? false);
+      }
+    } catch (err) {
+      console.error("Error loading more jobs:", err);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   return (
@@ -347,6 +369,26 @@ export default function JobsPage() {
                   </button>
                 );
               })}
+
+              {/* Show More Jobs */}
+              {hasMoreJobs && viewFilter === "all" && (
+                <div className="flex justify-center py-4">
+                  <button
+                    onClick={loadMoreJobs}
+                    disabled={loadingMore}
+                    className="px-6 py-2.5 rounded-xl bg-[#1d2226] border border-[#38434f] text-xs font-bold text-slate-400 hover:text-white hover:border-teal-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      "Show More"
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Right: Job Detail */}

@@ -4,18 +4,26 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { challenges, companyPages, users, challengeTeams, challengeSubmissions } from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, lt } from "drizzle-orm";
 
 // ─── Challenges CRUD ─────────────────────────────────────────────────────
 
-export async function getAllChallenges() {
+export async function getAllChallenges(limit = 10, cursor?: string) {
   try {
+    const whereClause = cursor ? lt(challenges.createdAt, cursor) : undefined;
+
     const list = await db
       .select()
       .from(challenges)
-      .orderBy(desc(challenges.createdAt));
+      .where(whereClause)
+      .orderBy(desc(challenges.createdAt))
+      .limit(limit + 1);
       
-    return { success: true, challenges: list };
+    const hasMore = list.length > limit;
+    const items = hasMore ? list.slice(0, limit) : list;
+    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt : null;
+
+    return { success: true, challenges: items, nextCursor, hasMore };
   } catch (error: any) {
     console.error("Error fetching challenges:", error);
     return { success: false, error: "Failed to load challenges." };

@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { companyPages, users, jobPostings, jobApplications } from "@/db/schema";
-import { eq, desc, like, sql, and } from "drizzle-orm";
+import { eq, desc, like, sql, and, lt } from "drizzle-orm";
 
 function generateSlug(name: string): string {
   return name
@@ -164,21 +164,29 @@ export async function getMyCompanyPages() {
   }
 }
 
-export async function getAllCompanyPages(limit = 20, offset = 0) {
+export async function getAllCompanyPages(limit = 10, cursor?: string) {
   try {
+    const whereClause = cursor ? lt(companyPages.createdAt, cursor) : undefined;
+
     const rows = await db
       .select()
       .from(companyPages)
-      .orderBy(desc(companyPages.followersCount), desc(companyPages.createdAt))
-      .limit(limit)
-      .offset(offset);
+      .where(whereClause)
+      .orderBy(desc(companyPages.createdAt))
+      .limit(limit + 1);
+
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt : null;
 
     return {
       success: true,
-      pages: rows.map((p) => ({
+      pages: items.map((p) => ({
         ...p,
         specialties: JSON.parse(p.specialtiesJson || "[]") as string[],
       })),
+      nextCursor,
+      hasMore,
     };
   } catch (err: any) {
     return { success: false, pages: [], error: err.message };

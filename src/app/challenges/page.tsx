@@ -40,6 +40,9 @@ export default function ChallengesPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [editChallenge, setEditChallenge] = useState<any>(null);
+  const [challengesCursor, setChallengesCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreChallenges, setHasMoreChallenges] = useState(true);
 
   // Compete flow state
   const [competingChallenge, setCompetingChallenge] = useState<any>(null);
@@ -68,11 +71,13 @@ export default function ChallengesPage() {
     async function loadData() {
       try {
         const [chalRes, compRes] = await Promise.all([
-          getAllChallenges(),
+          getAllChallenges(10),
           session ? getMyCompanyPages() : Promise.resolve({ success: true, pages: [] })
         ]);
         if (chalRes.success && chalRes.challenges) {
           setChallenges(chalRes.challenges);
+          setChallengesCursor(chalRes.nextCursor ?? null);
+          setHasMoreChallenges(chalRes.hasMore ?? false);
         }
         if (compRes.success && compRes.pages) {
           setCompanies(compRes.pages);
@@ -113,6 +118,23 @@ export default function ChallengesPage() {
     else setUserTeam(null);
     if (subRes.success) setUserSubmission(subRes.submission);
     else setUserSubmission(null);
+  };
+
+  const loadMoreChallenges = async () => {
+    if (!challengesCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const res = await getAllChallenges(10, challengesCursor);
+      if (res.success && res.challenges) {
+        setChallenges(prev => [...prev, ...res.challenges]);
+        setChallengesCursor(res.nextCursor ?? null);
+        setHasMoreChallenges(res.hasMore ?? false);
+      }
+    } catch (err) {
+      console.error("Error loading more challenges:", err);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const openCompeteFlow = async (challenge: any) => {
@@ -496,6 +518,26 @@ export default function ChallengesPage() {
             })
           )}
         </div>
+
+        {/* Show More Challenges */}
+        {hasMoreChallenges && filteredChallenges.length > 0 && (
+          <div className="flex justify-center py-8">
+            <button
+              onClick={loadMoreChallenges}
+              disabled={loadingMore}
+              className="px-6 py-2.5 rounded-xl bg-[#1d2226] border border-[#38434f] text-xs font-bold text-slate-400 hover:text-white hover:border-emerald-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {loadingMore ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                "Show More"
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ─── Compete Flow Modal ───────────────────────────────────────── */}

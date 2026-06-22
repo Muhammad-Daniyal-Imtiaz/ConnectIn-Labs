@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { jobPostings, jobApplications, users, companyPages } from "@/db/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, lt } from "drizzle-orm";
 
 export async function createJobPosting(formData: FormData) {
   try {
@@ -99,16 +99,26 @@ export async function getAllJobs(filters?: {
   employmentType?: string;
   experienceLevel?: string;
   locationType?: string;
-}) {
+}, limit = 10, cursor?: string) {
   try {
-    let query = db.select().from(jobPostings).where(eq(jobPostings.isOpen, true));
+    const conditions = [eq(jobPostings.isOpen, true)];
+    if (cursor) {
+      conditions.push(lt(jobPostings.createdAt, cursor));
+    }
 
-    const jobs = await query.orderBy(
-      desc(jobPostings.isFeatured),
-      desc(jobPostings.createdAt)
-    );
+    const jobs = await db.select().from(jobPostings)
+      .where(and(...conditions))
+      .orderBy(
+        desc(jobPostings.isFeatured),
+        desc(jobPostings.createdAt)
+      )
+      .limit(limit + 1);
 
-    let filtered = jobs;
+    const hasMore = jobs.length > limit;
+    const items = hasMore ? jobs.slice(0, limit) : jobs;
+    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt : null;
+
+    let filtered = items;
     if (filters?.industry && filters.industry !== "All") {
       filtered = filtered.filter((j) => j.industry === filters.industry);
     }
@@ -142,6 +152,8 @@ export async function getAllJobs(filters?: {
         benefits: JSON.parse(j.benefitsJson || "[]") as string[],
         hasApplied: userAppliedJobIds.has(j.id),
       })),
+      nextCursor,
+      hasMore,
     };
   } catch (err: any) {
     return { success: false, jobs: [], error: err.message };

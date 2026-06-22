@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { users, profiles, connections, follows } from "@/db/schema";
-import { eq, and, or, count, desc } from "drizzle-orm";
+import { eq, and, or, count, desc, lt } from "drizzle-orm";
 
 async function getCurrentUser() {
   const session = await getServerSession(authOptions);
@@ -165,7 +165,7 @@ export async function getConnectionStatus(targetUserId: string) {
   }
 }
 
-export async function getMyNetwork() {
+export async function getMyNetwork(suggestionsLimit = 10, suggestionsCursor?: string) {
   try {
     const me = await getCurrentUser();
     if (!me) return { success: false, error: "Unauthorized" };
@@ -198,20 +198,22 @@ export async function getMyNetwork() {
       ? await db.select().from(users).where(or(...followingIds.map(id => eq(users.id, id))))
       : [];
 
-    const suggestedUsers = await db.select().from(users)
-      .where(or(...connectedUsers.map(c => eq(users.id, c.id)).concat(
-        [eq(users.id, myId)]
-      )))
-      .limit(20);
-
     const allKnownIds = new Set([myId, ...connectedUsers.map(c => c.id), ...followingIds]);
+
+    const allCursorDate = suggestionsCursor ? new Date(suggestionsCursor) : null;
     const allUsers = await db.select().from(users).limit(200);
-    const peopleYouMayKnow = allUsers
+    const peopleYouMayKnowRaw = allUsers
       .filter(u => !allKnownIds.has(u.id))
-      .slice(0, 12);
+      .filter(u => !allCursorDate || (u.createdAt && new Date(u.createdAt) < allCursorDate));
+
+    const hasMoreSuggestions = peopleYouMayKnowRaw.length > suggestionsLimit;
+    const peopleYouMayKnowItems = hasMoreSuggestions ? peopleYouMayKnowRaw.slice(0, suggestionsLimit) : peopleYouMayKnowRaw;
+    const nextSuggestionsCursor = hasMoreSuggestions && peopleYouMayKnowItems.length > 0
+      ? peopleYouMayKnowItems[peopleYouMayKnowItems.length - 1].createdAt
+      : null;
 
     const profilesMap = new Map<string, any>();
-    for (const u of peopleYouMayKnow) {
+    for (const u of peopleYouMayKnowItems) {
       const p = await db.select().from(profiles).where(eq(profiles.userId, u.id)).limit(1);
       profilesMap.set(u.id, p[0] || null);
     }
@@ -225,13 +227,15 @@ export async function getMyNetwork() {
       pendingIncoming: pendingIncoming.map(c => ({ id: c.id, userId: c.senderId, name: c.senderName, avatar: c.senderAvatar, since: c.createdAt })),
       pendingOutgoing: pendingOutgoing.map(c => ({ id: c.id, userId: c.receiverId, name: c.receiverName, avatar: c.receiverAvatar, since: c.createdAt })),
       following: followingUsers.map(u => ({ id: u.id, name: u.name, avatar: u.avatarUrl })),
-      peopleYouMayKnow: peopleYouMayKnow.map(u => ({
+      peopleYouMayKnow: peopleYouMayKnowItems.map(u => ({
         id: u.id,
         name: u.name,
         avatar: u.avatarUrl,
         role: u.role,
         profile: profilesMap.get(u.id),
       })),
+      nextSuggestionsCursor,
+      hasMoreSuggestions,
     };
   } catch (error: any) {
     console.error("Error loading network:", error);

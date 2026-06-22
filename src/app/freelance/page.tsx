@@ -27,6 +27,9 @@ export default function FreelancePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("All");
   const [loading, setLoading] = useState(true);
+  const [projectsCursor, setProjectsCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreProjects, setHasMoreProjects] = useState(true);
 
   // Post Freelance Project Modal
   const [showPostModal, setShowPostModal] = useState(false);
@@ -51,18 +54,22 @@ export default function FreelancePage() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const result = await getFreelanceProjects();
+        const result = await getFreelanceProjects(10);
         if (result.success && result.projects && result.projects.length > 0) {
           setProjects(result.projects.map(p => ({
             ...p,
             postedDate: "Just now"
           })) as any);
+          setProjectsCursor(result.nextCursor ?? null);
+          setHasMoreProjects(result.hasMore ?? false);
         } else {
           setProjects(freelanceProjectsData);
+          setHasMoreProjects(false);
         }
       } catch (e) {
         console.error("Failed to fetch freelance projects:", e);
         setProjects(freelanceProjectsData);
+        setHasMoreProjects(false);
       } finally {
         setLoading(false);
       }
@@ -121,6 +128,26 @@ export default function FreelancePage() {
       setFormSecondaryIndustries(prev => prev.filter(t => t !== tag));
     } else {
       setFormSecondaryIndustries(prev => [...prev, tag]);
+    }
+  };
+
+  const loadMoreProjects = async () => {
+    if (!projectsCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const result = await getFreelanceProjects(10, projectsCursor);
+      if (result.success && result.projects) {
+        setProjects(prev => [...prev, ...result.projects.map(p => ({
+          ...p,
+          postedDate: "Just now"
+        })) as any]);
+        setProjectsCursor(result.nextCursor ?? null);
+        setHasMoreProjects(result.hasMore ?? false);
+      }
+    } catch (e) {
+      console.error("Failed to load more freelance projects:", e);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -341,6 +368,26 @@ export default function FreelancePage() {
             ))
           )}
         </div>
+
+        {/* Show More Projects */}
+        {hasMoreProjects && filteredProjects.length > 0 && (
+          <div className="flex justify-center py-8">
+            <button
+              onClick={loadMoreProjects}
+              disabled={loadingMore}
+              className="px-6 py-2.5 rounded-xl bg-[#1d2226] border border-[#38434f] text-xs font-bold text-slate-400 hover:text-white hover:border-teal-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {loadingMore ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                "Show More"
+              )}
+            </button>
+          </div>
+        )}
 
       </div>
 

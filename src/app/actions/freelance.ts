@@ -4,10 +4,12 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { freelanceProjects, users, profiles, freelanceSubmissions } from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, lt } from "drizzle-orm";
 
-export async function getFreelanceProjects() {
+export async function getFreelanceProjects(limit = 10, cursor?: string) {
   try {
+    const whereClause = cursor ? lt(freelanceProjects.createdAt, cursor) : undefined;
+
     const list = await db
       .select({
         project: freelanceProjects,
@@ -17,7 +19,13 @@ export async function getFreelanceProjects() {
       .from(freelanceProjects)
       .leftJoin(profiles, eq(freelanceProjects.userId, profiles.userId))
       .leftJoin(users, eq(freelanceProjects.userId, users.id))
-      .orderBy(desc(freelanceProjects.createdAt));
+      .where(whereClause)
+      .orderBy(desc(freelanceProjects.createdAt))
+      .limit(limit + 1);
+
+    const hasMore = list.length > limit;
+    const items = hasMore ? list.slice(0, limit) : list;
+    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].project.createdAt : null;
 
     const session = await getServerSession(authOptions);
     let currentUserEmail = session?.user?.email?.toLowerCase().trim();
@@ -32,7 +40,6 @@ export async function getFreelanceProjects() {
         const apps = await db.select({ projectId: freelanceSubmissions.projectId }).from(freelanceSubmissions).where(eq(freelanceSubmissions.applicantUserId, currentUserId));
         appliedProjectIds = new Set(apps.map(a => a.projectId));
         
-        // Fetch all submissions for projects owned by the current user
         allSubmissions = await db
           .select({
             submission: freelanceSubmissions,
@@ -45,7 +52,7 @@ export async function getFreelanceProjects() {
       }
     }
 
-    const formattedProjects = list.map(({ project }) => {
+    const formattedProjects = items.map(({ project }) => {
       const isOwner = currentUserId === project.userId;
       const projectSubs = isOwner 
         ? allSubmissions.filter(s => s.submission.projectId === project.id).map(s => ({ ...s.submission, applicantName: s.user?.name, applicantAvatar: s.user?.avatarUrl }))
@@ -61,7 +68,7 @@ export async function getFreelanceProjects() {
       };
     });
 
-    return { success: true, projects: formattedProjects };
+    return { success: true, projects: formattedProjects, nextCursor, hasMore };
   } catch (error) {
     console.error("Error loading freelance projects:", error);
     return { success: false, error: "Failed to load freelance projects from database." };

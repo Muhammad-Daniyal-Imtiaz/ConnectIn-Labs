@@ -13,7 +13,8 @@ import {
   X,
   Activity,
   Laptop,
-  Filter
+  Filter,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getMvps, createMvp } from "@/app/actions/mvps";
@@ -145,6 +146,9 @@ export default function MVPMarketplace() {
   const [showFilters, setShowFilters] = useState(false);
   const [inquireMvp, setInquireMvp] = useState<MVP | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mvpsCursor, setMvpsCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreMvps, setHasMoreMvps] = useState(true);
 
   // Listing Modal State
   const [showListModal, setShowListModal] = useState(false);
@@ -191,15 +195,19 @@ export default function MVPMarketplace() {
   useEffect(() => {
     const fetchMvps = async () => {
       try {
-        const result = await getMvps();
+        const result = await getMvps(10);
         if (result.success && result.mvps && result.mvps.length > 0) {
           setMvps(result.mvps as MVP[]);
+          setMvpsCursor(result.nextCursor ?? null);
+          setHasMoreMvps(result.hasMore ?? false);
         } else {
           setMvps(initialMVPs);
+          setHasMoreMvps(false);
         }
       } catch (e) {
         console.error("Failed to fetch MVPs:", e);
         setMvps(initialMVPs);
+        setHasMoreMvps(false);
       } finally {
         setLoading(false);
       }
@@ -219,6 +227,23 @@ export default function MVPMarketplace() {
     setPriceMin("");
     setPriceMax("");
     setSortOrder("newest");
+  };
+
+  const loadMoreMvps = async () => {
+    if (!mvpsCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const result = await getMvps(10, mvpsCursor);
+      if (result.success && result.mvps) {
+        setMvps(prev => [...prev, ...(result.mvps as MVP[])]);
+        setMvpsCursor(result.nextCursor ?? null);
+        setHasMoreMvps(result.hasMore ?? false);
+      }
+    } catch (e) {
+      console.error("Failed to load more MVPs:", e);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const handleListMvp = async (e: React.FormEvent) => {
@@ -581,6 +606,26 @@ export default function MVPMarketplace() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Show More MVPs */}
+        {hasMoreMvps && filteredMVPs.length > 0 && (
+          <div className="flex justify-center py-8">
+            <button
+              onClick={loadMoreMvps}
+              disabled={loadingMore}
+              className="px-6 py-2.5 rounded-xl bg-[#0c111d] border border-white/5 text-xs font-bold text-slate-400 hover:text-white hover:border-emerald-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {loadingMore ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                "Show More"
+              )}
+            </button>
           </div>
         )}
       </div>

@@ -33,15 +33,22 @@ export default function CompaniesPage() {
   const [viewFilter, setViewFilter] = useState<"all" | "mine">("all");
   const [locationSearch, setLocationSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [pagesCursor, setPagesCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMorePages, setHasMorePages] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       const [all, mine] = await Promise.all([
-        getAllCompanyPages(50),
+        getAllCompanyPages(10),
         session ? getMyCompanyPage() : Promise.resolve({ success: true, page: null }),
       ]);
-      if (all.success) setPages(all.pages);
+      if (all.success) {
+        setPages(all.pages);
+        setPagesCursor(all.nextCursor ?? null);
+        setHasMorePages(all.hasMore ?? false);
+      }
       if (mine.success) setMyPage(mine.page);
       setLoading(false);
     }
@@ -54,6 +61,23 @@ export default function CompaniesPage() {
     setIndustry("All");
     setStage("All");
     setLocationSearch("");
+  };
+
+  const loadMorePages = async () => {
+    if (!pagesCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const all = await getAllCompanyPages(10, pagesCursor);
+      if (all.success && all.pages) {
+        setPages(prev => [...prev, ...all.pages]);
+        setPagesCursor(all.nextCursor ?? null);
+        setHasMorePages(all.hasMore ?? false);
+      }
+    } catch (err) {
+      console.error("Error loading more companies:", err);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const filtered = pages.filter((p) => {
@@ -281,6 +305,26 @@ export default function CompaniesPage() {
                 </div>
               </Link>
             ))}
+          </div>
+        )}
+
+        {/* Show More Companies */}
+        {hasMorePages && filtered.length > 0 && (
+          <div className="flex justify-center py-8">
+            <button
+              onClick={loadMorePages}
+              disabled={loadingMore}
+              className="px-6 py-2.5 rounded-xl bg-[#1d2226] border border-[#38434f] text-xs font-bold text-slate-400 hover:text-white hover:border-emerald-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {loadingMore ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                "Show More"
+              )}
+            </button>
           </div>
         )}
       </div>

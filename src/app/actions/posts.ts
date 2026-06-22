@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { posts, users, profiles, postLikes } from "@/db/schema";
-import { eq, desc, count } from "drizzle-orm";
+import { eq, desc, count, lt } from "drizzle-orm";
 
 export async function getPostById(postId: string) {
   try {
@@ -78,7 +78,7 @@ export async function getPostById(postId: string) {
   }
 }
 
-export async function getPosts() {
+export async function getPosts(limit = 10, cursor?: string) {
   try {
     const session = await getServerSession(authOptions);
     let currentUserId: string | null = null;
@@ -87,6 +87,8 @@ export async function getPosts() {
       const dbUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
       if (dbUsers.length > 0) currentUserId = dbUsers[0].id;
     }
+
+    const whereClause = cursor ? lt(posts.createdAt, cursor) : undefined;
 
     const list = await db
       .select({
@@ -97,9 +99,15 @@ export async function getPosts() {
       .from(posts)
       .leftJoin(profiles, eq(posts.userId, profiles.userId))
       .leftJoin(users, eq(posts.userId, users.id))
-      .orderBy(desc(posts.createdAt));
+      .where(whereClause)
+      .orderBy(desc(posts.createdAt))
+      .limit(limit + 1);
 
-    const formattedPosts = await Promise.all(list.map(async ({ post, profile, user }) => {
+    const hasMore = list.length > limit;
+    const items = hasMore ? list.slice(0, limit) : list;
+    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].post.createdAt : null;
+
+    const formattedPosts = await Promise.all(items.map(async ({ post, profile, user }) => {
       const likeCountResult = await db
         .select({ value: count() })
         .from(postLikes)
@@ -126,7 +134,7 @@ export async function getPosts() {
       };
     }));
 
-    return { success: true, posts: formattedPosts };
+    return { success: true, posts: formattedPosts, nextCursor, hasMore };
   } catch (error) {
     console.error("Error loading posts:", error);
     return { success: false, error: "Failed to load posts from database." };

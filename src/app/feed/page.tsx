@@ -96,6 +96,9 @@ export default function FeedPage() {
   const [userInfo, setUserInfo] = useState<any>(null);
   const [companyCount, setCompanyCount] = useState(0);
   const [featuredCompanies, setFeaturedCompanies] = useState<any[]>([]);
+  const [postsCursor, setPostsCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
   const pathname = usePathname();
   const { data: session } = useSession();
 
@@ -110,9 +113,11 @@ export default function FeedPage() {
     async function loadFeed() {
       setLoading(true);
       try {
-        const res = await getPosts();
+        const res = await getPosts(10);
         if (res.success && res.posts) {
           setPostsList(res.posts);
+          setPostsCursor(res.nextCursor ?? null);
+          setHasMorePosts(res.hasMore ?? false);
         }
       } catch (err) {
         console.error("Failed to load feed:", err);
@@ -206,6 +211,23 @@ export default function FeedPage() {
     setSearch("");
     setSortBy("Latest");
     setDateRange("Any Time");
+  };
+
+  const loadMorePosts = async () => {
+    if (!postsCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const res = await getPosts(10, postsCursor);
+      if (res.success && res.posts) {
+        setPostsList(prev => [...prev, ...res.posts]);
+        setPostsCursor(res.nextCursor ?? null);
+        setHasMorePosts(res.hasMore ?? false);
+      }
+    } catch (err) {
+      console.error("Failed to load more posts:", err);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const CATEGORIES = ["All", "Idea", "MVP", "Investment Wanted", "Partners Wanted", "Startup Space Wanted", "Cofounder Wanted"];
@@ -543,6 +565,26 @@ export default function FeedPage() {
                         />
                       ))}
                     </AnimatePresence>
+
+                    {/* Show More button */}
+                    {hasMorePosts && !search && categoryFilter === "All" && dateRange === "Any Time" && (
+                      <div className="flex justify-center py-4">
+                        <button
+                          onClick={loadMorePosts}
+                          disabled={loadingMore}
+                          className="px-6 py-2.5 rounded-xl bg-[#1d2226] border border-[#38434f] text-xs font-bold text-slate-400 hover:text-white hover:border-emerald-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          {loadingMore ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Loading...
+                            </>
+                          ) : (
+                            "Show More"
+                          )}
+                        </button>
+                      </div>
+                    )}
               </div>
             )}
           </div>
