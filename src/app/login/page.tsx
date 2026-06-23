@@ -30,6 +30,21 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Display NextAuth error from URL if present
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      const errorMap: Record<string, string> = {
+        OAuthSignin: "Google sign-in failed. Please try again.",
+        OAuthCallback: "Google sign-in failed. Please try again.",
+        OAuthCreateAccount: "Could not create account with Google. Please try email sign-in.",
+        AccessDenied: "Access denied. Please contact support.",
+        Callback: "Authentication failed. Please try again.",
+      };
+      setErrorMsg(errorMap[errorParam] || `Sign-in error: ${errorParam}`);
+    }
+  }, [searchParams]);
+
   // Redirect if already logged in
   useEffect(() => {
     if (status === "authenticated" && session) {

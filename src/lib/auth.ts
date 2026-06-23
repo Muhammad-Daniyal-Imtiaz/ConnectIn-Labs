@@ -31,11 +31,14 @@ export const authOptions: NextAuthOptions = {
         async request({ provider, params, checks }: any) {
           const clientId = process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || provider.clientId;
           const clientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || provider.clientSecret;
+          // Explicitly construct redirect_uri to avoid double-slash from NEXTAUTH_URL trailing slash
+          const baseUrl = (process.env.NEXTAUTH_URL || "").replace(/\/$/, "") || "https://connectin-labs.pages.dev";
+          const redirectUri = `${baseUrl}/api/auth/callback/google`;
           const body = new URLSearchParams({
             code: params.code,
             client_id: clientId,
             client_secret: clientSecret,
-            redirect_uri: provider.callbackUrl,
+            redirect_uri: redirectUri,
             grant_type: "authorization_code",
           });
           if (checks?.code_verifier) body.set("code_verifier", checks.code_verifier);
@@ -45,6 +48,9 @@ export const authOptions: NextAuthOptions = {
             body,
           });
           const tokens = await res.json();
+          if (!res.ok) {
+            console.error("Google token exchange failed:", tokens);
+          }
           return { tokens };
         },
       },
@@ -52,9 +58,17 @@ export const authOptions: NextAuthOptions = {
       userinfo: {
         url: "https://openidconnect.googleapis.com/v1/userinfo",
         async request({ tokens }: any) {
+          if (!tokens?.access_token) {
+            throw new Error("No access_token from Google token exchange");
+          }
           const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
             headers: { Authorization: `Bearer ${tokens.access_token}` },
           });
+          if (!res.ok) {
+            const err = await res.text();
+            console.error("Google userinfo fetch failed:", res.status, err);
+            throw new Error(`Google userinfo fetch failed: ${res.status}`);
+          }
           return res.json();
         },
       },
@@ -132,17 +146,22 @@ export const authOptions: NextAuthOptions = {
         const name = user.name || "Google User";
         const avatarUrl = user.image || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
 
-        // Sync with Turso DB
-        const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
-        if (existingUser.length === 0) {
-          const newUserId = `usr_${Math.random().toString(36).substring(2, 11)}`;
-          await db.insert(users).values({
-            id: newUserId,
-            email,
-            name,
-            role: "None", // None triggers OnboardingOverlay to prompt for role
-            avatarUrl,
-          });
+        try {
+          // Sync with Turso DB
+          const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
+          if (existingUser.length === 0) {
+            const newUserId = `usr_${Math.random().toString(36).substring(2, 11)}`;
+            await db.insert(users).values({
+              id: newUserId,
+              email,
+              name,
+              role: "None", // None triggers OnboardingOverlay to prompt for role
+              avatarUrl,
+            });
+          }
+        } catch (err) {
+          console.error("DB sync failed in signIn callback, allowing login anyway:", err);
+          // Allow login even if DB sync fails — session will still work
         }
       }
       return true;
