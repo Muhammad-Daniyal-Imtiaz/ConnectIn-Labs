@@ -29,10 +29,12 @@ export const authOptions: NextAuthOptions = {
       token: {
         url: "https://oauth2.googleapis.com/token",
         async request({ provider, params, checks }: any) {
+          const clientId = process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || provider.clientId;
+          const clientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || provider.clientSecret;
           const body = new URLSearchParams({
             code: params.code,
-            client_id: provider.clientId,
-            client_secret: provider.clientSecret,
+            client_id: clientId,
+            client_secret: clientSecret,
             redirect_uri: provider.callbackUrl,
             grant_type: "authorization_code",
           });
@@ -185,3 +187,10 @@ export const authOptions: NextAuthOptions = {
   // @ts-ignore: trustHost is valid NextAuth option
   trustHost: true,
 };
+
+// Inject secret at runtime so it isn't cached as undefined/default during module load
+Object.defineProperty(authOptions, "secret", {
+  get() { return process.env.NEXTAUTH_SECRET || "indus-foundry-secret-key-123456"; },
+  enumerable: true,
+  configurable: true,
+});
