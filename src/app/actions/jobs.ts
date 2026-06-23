@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { jobPostings, jobApplications, users, companyPages } from "@/db/schema";
 import { eq, desc, and, sql, lt } from "drizzle-orm";
+import { getCached, invalidateCache } from "@/lib/cache";
+import { CACHE_TAGS, TTL } from "@/lib/cache-tags";
 
 export async function createJobPosting(formData: FormData) {
   try {
@@ -84,6 +86,7 @@ export async function createJobPosting(formData: FormData) {
     };
 
     await db.insert(jobPostings).values(job);
+    invalidateCache(CACHE_TAGS.JOBS);
     return {
       success: true,
       job: { ...job, skills, requirements, benefits },
@@ -101,6 +104,7 @@ export async function getAllJobs(filters?: {
   locationType?: string;
 }, limit = 10, cursor?: string) {
   try {
+    return await getCached(`getAllJobs:${JSON.stringify(filters ?? {})}:${limit}:${cursor || "nc"}`, CACHE_TAGS.JOBS, async () => {
     const conditions = [eq(jobPostings.isOpen, true)];
     if (cursor) {
       conditions.push(lt(jobPostings.createdAt, cursor));
@@ -155,6 +159,7 @@ export async function getAllJobs(filters?: {
       nextCursor,
       hasMore,
     };
+    }); // end getCached
   } catch (err: any) {
     return { success: false, jobs: [], error: err.message };
   }
@@ -162,7 +167,11 @@ export async function getAllJobs(filters?: {
 
 export async function getJobById(id: string) {
   try {
-    const rows = await db.select().from(jobPostings).where(eq(jobPostings.id, id)).limit(1);
+    const rows = await getCached(`getJobById:${id}`, CACHE_TAGS.JOBS, async () => {
+    const result = await db.select().from(jobPostings).where(eq(jobPostings.id, id)).limit(1);
+    if (!result.length) return { success: false, error: "Job not found." };
+    return result;
+    });
     if (!rows.length) return { success: false, error: "Job not found." };
 
     const job = rows[0];
@@ -240,6 +249,7 @@ export async function applyForJob(jobId: string, formData: FormData) {
       .set({ applicationsCount: sql`${jobPostings.applicationsCount} + 1` })
       .where(eq(jobPostings.id, jobId));
 
+    invalidateCache(CACHE_TAGS.JOBS, CACHE_TAGS.JOB_APPLICATIONS);
     return { success: true, application };
   } catch (err: any) {
     console.error("applyForJob error:", err);
@@ -273,6 +283,7 @@ export async function deleteJobPosting(jobId: string) {
     await db.delete(jobApplications).where(eq(jobApplications.jobId, jobId));
     await db.delete(jobPostings).where(eq(jobPostings.id, jobId));
 
+    invalidateCache(CACHE_TAGS.JOBS, CACHE_TAGS.JOB_APPLICATIONS);
     return { success: true };
   } catch (err: any) {
     console.error("deleteJobPosting error:", err);

@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { posts, users, profiles, postLikes } from "@/db/schema";
 import { eq, desc, count, lt } from "drizzle-orm";
+import { getCached, invalidateCache } from "@/lib/cache";
+import { CACHE_TAGS, TTL } from "@/lib/cache-tags";
 
 export async function getPostById(postId: string) {
   try {
@@ -16,6 +18,7 @@ export async function getPostById(postId: string) {
       if (dbUsers.length > 0) currentUserId = dbUsers[0].id;
     }
 
+    return await getCached(`getPostById:${postId}:${currentUserId || "anon"}`, CACHE_TAGS.POSTS, async () => {
     const result = await db
       .select({
         post: posts,
@@ -72,6 +75,7 @@ export async function getPostById(postId: string) {
         likers,
       },
     };
+    }); // end getCached
   } catch (error: any) {
     console.error("Error loading post:", error);
     return { success: false, error: "Failed to load post." };
@@ -88,6 +92,7 @@ export async function getPosts(limit = 10, cursor?: string) {
       if (dbUsers.length > 0) currentUserId = dbUsers[0].id;
     }
 
+    return await getCached(`getPosts:${limit}:${cursor || "no_cursor"}:${currentUserId || "anon"}`, CACHE_TAGS.POSTS, async () => {
     const whereClause = cursor ? lt(posts.createdAt, cursor) : undefined;
 
     const list = await db
@@ -135,6 +140,7 @@ export async function getPosts(limit = 10, cursor?: string) {
     }));
 
     return { success: true, posts: formattedPosts, nextCursor, hasMore };
+    }); // end getCached
   } catch (error) {
     console.error("Error loading posts:", error);
     return { success: false, error: "Failed to load posts from database." };
@@ -209,6 +215,7 @@ export async function createPost(formData: FormData) {
     };
 
     await db.insert(posts).values(newPost);
+    invalidateCache(CACHE_TAGS.POSTS);
     return {
       success: true,
       post: {
@@ -266,6 +273,7 @@ export async function toggleLike(postId: string) {
       .from(postLikes)
       .where(eq(postLikes.postId, postId));
 
+    invalidateCache(CACHE_TAGS.POSTS, CACHE_TAGS.POST_LIKES);
     return {
       success: true,
       liked: existing.length === 0,
@@ -289,9 +297,13 @@ export async function getPostLikes(postId: string) {
       .where(eq(postLikes.postId, postId))
       .orderBy(desc(postLikes.createdAt));
 
-    return { success: true, likes };
+      return { success: true, likes };
   } catch (error: any) {
     console.error("Error getting post likes:", error);
     return { success: false, error: error.message || "Failed to get likes." };
   }
+}
+
+function cacheKeyForPosts(...args: unknown[]) {
+  return args.map(a => (a instanceof Date ? a.toISOString() : String(a ?? "null"))).join(":");
 }
