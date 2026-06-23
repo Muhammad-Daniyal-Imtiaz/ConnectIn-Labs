@@ -5,11 +5,14 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { challenges, companyPages, users, challengeTeams, challengeSubmissions } from "@/db/schema";
 import { eq, desc, and, lt } from "drizzle-orm";
+import { getCached, invalidateCache } from "@/lib/cache";
+import { CACHE_TAGS, TTL } from "@/lib/cache-tags";
 
 // ─── Challenges CRUD ─────────────────────────────────────────────────────
 
 export async function getAllChallenges(limit = 10, cursor?: string) {
   try {
+    return await getCached(`getAllChallenges:${limit}:${cursor || "nc"}`, CACHE_TAGS.CHALLENGES, async () => {
     const whereClause = cursor ? lt(challenges.createdAt, cursor) : undefined;
 
     const list = await db
@@ -24,6 +27,7 @@ export async function getAllChallenges(limit = 10, cursor?: string) {
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt : null;
 
     return { success: true, challenges: items, nextCursor, hasMore };
+    });
   } catch (error: any) {
     console.error("Error fetching challenges:", error);
     return { success: false, error: "Failed to load challenges." };
@@ -32,9 +36,11 @@ export async function getAllChallenges(limit = 10, cursor?: string) {
 
 export async function getChallengeById(id: string) {
   try {
+    return await getCached(`getChallengeById:${id}`, CACHE_TAGS.CHALLENGES, async () => {
     const list = await db.select().from(challenges).where(eq(challenges.id, id)).limit(1);
     if (!list.length) return { success: false, error: "Challenge not found." };
     return { success: true, challenge: list[0] };
+    });
   } catch (error: any) {
     console.error("Error fetching challenge:", error);
     return { success: false, error: "Failed to load challenge." };
@@ -101,6 +107,7 @@ export async function createChallenge(formData: FormData) {
     };
 
     await db.insert(challenges).values(challengeData);
+    invalidateCache(CACHE_TAGS.CHALLENGES);
     
     return { success: true, challenge: challengeData };
   } catch (error: any) {
@@ -145,6 +152,7 @@ export async function updateChallenge(id: string, formData: FormData) {
     };
 
     await db.update(challenges).set(updateData).where(eq(challenges.id, id));
+    invalidateCache(CACHE_TAGS.CHALLENGES);
 
     return { success: true, challenge: { ...existing[0], ...updateData } };
   } catch (error: any) {
@@ -168,6 +176,7 @@ export async function deleteChallenge(id: string) {
     if (existing[0].postedByUserId !== dbUser.id) throw new Error("Unauthorized to delete this challenge");
 
     await db.delete(challenges).where(eq(challenges.id, id));
+    invalidateCache(CACHE_TAGS.CHALLENGES);
     return { success: true };
   } catch (error: any) {
     console.error("Error deleting challenge:", error);
@@ -206,6 +215,7 @@ export async function createChallengeTeam(formData: FormData) {
     };
 
     await db.insert(challengeTeams).values(teamData);
+    invalidateCache(CACHE_TAGS.CHALLENGE_TEAMS);
     return { success: true, team: teamData };
   } catch (error: any) {
     console.error("Error creating team:", error);
@@ -215,12 +225,14 @@ export async function createChallengeTeam(formData: FormData) {
 
 export async function getChallengeTeams(challengeId: string) {
   try {
+    return await getCached(`getChallengeTeams:${challengeId}`, CACHE_TAGS.CHALLENGE_TEAMS, async () => {
     const list = await db
       .select()
       .from(challengeTeams)
       .where(eq(challengeTeams.challengeId, challengeId))
       .orderBy(desc(challengeTeams.createdAt));
     return { success: true, teams: list };
+    });
   } catch (error: any) {
     console.error("Error fetching teams:", error);
     return { success: false, error: "Failed to load teams." };
@@ -304,6 +316,7 @@ export async function createChallengeSubmission(formData: FormData) {
     };
 
     await db.insert(challengeSubmissions).values(submissionData);
+    invalidateCache(CACHE_TAGS.CHALLENGES, CACHE_TAGS.CHALLENGE_SUBMISSIONS);
     return { success: true, submission: submissionData };
   } catch (error: any) {
     console.error("Error creating submission:", error);
@@ -313,12 +326,14 @@ export async function createChallengeSubmission(formData: FormData) {
 
 export async function getChallengeSubmissions(challengeId: string) {
   try {
+    return await getCached(`getChallengeSubmissions:${challengeId}`, CACHE_TAGS.CHALLENGE_SUBMISSIONS, async () => {
     const list = await db
       .select()
       .from(challengeSubmissions)
       .where(eq(challengeSubmissions.challengeId, challengeId))
       .orderBy(desc(challengeSubmissions.createdAt));
     return { success: true, submissions: list };
+    });
   } catch (error: any) {
     console.error("Error fetching submissions:", error);
     return { success: false, error: "Failed to load submissions." };

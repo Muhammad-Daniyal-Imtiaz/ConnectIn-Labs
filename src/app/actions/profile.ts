@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { profiles, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getCached, invalidateCache } from "@/lib/cache";
+import { CACHE_TAGS, TTL } from "@/lib/cache-tags";
 
 export async function getProfile() {
   try {
@@ -20,13 +22,15 @@ export async function getProfile() {
     }
 
     const user = dbUsers[0];
-    const profileRows = await db.select().from(profiles).where(eq(profiles.userId, user.id)).limit(1);
+    return await getCached(`getProfile:${user.id}`, [CACHE_TAGS.USERS, CACHE_TAGS.PROFILES], async () => {
+      const profileRows = await db.select().from(profiles).where(eq(profiles.userId, user.id)).limit(1);
 
-    return {
-      success: true,
-      user,
-      profile: profileRows.length > 0 ? profileRows[0] : null,
-    };
+      return {
+        success: true,
+        user,
+        profile: profileRows.length > 0 ? profileRows[0] : null,
+      };
+    });
   } catch (error) {
     console.error("Error fetching profile:", error);
     return { success: false, error: "Failed to load profile" };
@@ -100,6 +104,7 @@ export async function saveProfile(formData: FormData) {
       await db.insert(profiles).values({ id: profileId, ...profileData });
     }
 
+    invalidateCache(CACHE_TAGS.USERS, CACHE_TAGS.PROFILES);
     return { success: true, primaryRole };
   } catch (error: any) {
     console.error("Error saving profile:", error);

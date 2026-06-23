@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getCached, invalidateCache } from "@/lib/cache";
+import { CACHE_TAGS, TTL } from "@/lib/cache-tags";
 
 export async function checkUserStatus() {
   try {
@@ -13,6 +15,7 @@ export async function checkUserStatus() {
       return { isAuthenticated: false, hasRole: false };
     }
 
+    return await getCached(`checkUserStatus:${session.user.email || "no-email"}`, CACHE_TAGS.USERS, async () => {
     const email = session.user.email?.toLowerCase().trim() || "";
     const sessionName = session.user.name || "User";
     const sessionImage = session.user.image || "";
@@ -28,7 +31,6 @@ export async function checkUserStatus() {
         hasRole, 
         user: {
           ...dbUser,
-          // Prefer DB avatar but fall back to session image (Google avatar)
           avatarUrl: dbUser.avatarUrl || sessionImage,
         }
       };
@@ -48,6 +50,7 @@ export async function checkUserStatus() {
         updatedAt: "",
       }
     };
+    }, TTL.SHORT); // end getCached
   } catch (error) {
     console.error("Error checking user status:", error);
     return { isAuthenticated: false, hasRole: false };
@@ -69,6 +72,7 @@ export async function saveUserOnboarding(role: string) {
     const existingUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (existingUsers.length > 0) {
       await db.update(users).set({ role }).where(eq(users.email, email));
+      invalidateCache(CACHE_TAGS.USERS);
       return { ...existingUsers[0], role };
     }
 
@@ -82,6 +86,7 @@ export async function saveUserOnboarding(role: string) {
     };
 
     await db.insert(users).values(newUser);
+    invalidateCache(CACHE_TAGS.USERS);
     return newUser;
   } catch (error) {
     console.error("Error during onboarding:", error);
@@ -98,6 +103,7 @@ export async function updateUserRole(role: string) {
 
     const email = session.user.email?.toLowerCase().trim() || "";
     await db.update(users).set({ role }).where(eq(users.email, email));
+    invalidateCache(CACHE_TAGS.USERS);
     return { success: true, role };
   } catch (error) {
     console.error("Error updating user role:", error);

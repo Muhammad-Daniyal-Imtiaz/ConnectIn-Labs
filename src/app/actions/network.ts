@@ -6,6 +6,9 @@ import { db } from "@/db";
 import { users, profiles, connections, follows } from "@/db/schema";
 import { eq, and, or, count, desc, lt } from "drizzle-orm";
 
+import { getCached, invalidateCache } from "@/lib/cache";
+import { CACHE_TAGS, TTL } from "@/lib/cache-tags";
+
 async function getCurrentUser() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) return null;
@@ -51,6 +54,7 @@ export async function sendConnectionRequest(targetUserId: string) {
       receiverAvatar: target.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(target.name)}`,
     });
 
+    invalidateCache(CACHE_TAGS.CONNECTIONS);
     return { success: true, status: "pending" };
   } catch (error: any) {
     console.error("Error sending connection request:", error);
@@ -68,6 +72,7 @@ export async function acceptConnectionRequest(connectionId: string) {
     if (rows[0].receiverId !== me.id) return { success: false, error: "Not authorized" };
 
     await db.update(connections).set({ status: "accepted" }).where(eq(connections.id, connectionId));
+    invalidateCache(CACHE_TAGS.CONNECTIONS);
     return { success: true };
   } catch (error: any) {
     console.error("Error accepting connection:", error);
@@ -85,6 +90,7 @@ export async function rejectConnectionRequest(connectionId: string) {
     if (rows[0].receiverId !== me.id) return { success: false, error: "Not authorized" };
 
     await db.update(connections).set({ status: "rejected" }).where(eq(connections.id, connectionId));
+    invalidateCache(CACHE_TAGS.CONNECTIONS);
     return { success: true };
   } catch (error: any) {
     console.error("Error rejecting connection:", error);
@@ -101,6 +107,7 @@ export async function removeConnection(targetUserId: string) {
       and(eq(connections.senderId, me.id), eq(connections.receiverId, targetUserId)),
       and(eq(connections.senderId, targetUserId), eq(connections.receiverId, me.id))
     ));
+    invalidateCache(CACHE_TAGS.CONNECTIONS);
     return { success: true };
   } catch (error: any) {
     console.error("Error removing connection:", error);
@@ -121,9 +128,11 @@ export async function toggleFollow(targetUserId: string) {
     if (existing.length > 0) {
       await db.delete(follows)
         .where(and(eq(follows.followerId, me.id), eq(follows.followingId, targetUserId)));
+      invalidateCache(CACHE_TAGS.FOLLOWS, CACHE_TAGS.CONNECTIONS);
       return { success: true, following: false };
     } else {
       await db.insert(follows).values({ followerId: me.id, followingId: targetUserId });
+      invalidateCache(CACHE_TAGS.FOLLOWS, CACHE_TAGS.CONNECTIONS);
       return { success: true, following: true };
     }
   } catch (error: any) {
@@ -134,6 +143,7 @@ export async function toggleFollow(targetUserId: string) {
 
 export async function getConnectionStatus(targetUserId: string) {
   try {
+    return await getCached(`getConnectionStatus:${targetUserId}`, [CACHE_TAGS.CONNECTIONS, CACHE_TAGS.FOLLOWS], async () => {
     const me = await getCurrentUser();
     if (!me) return { success: true, status: "none" as const, following: false };
 
@@ -159,6 +169,7 @@ export async function getConnectionStatus(targetUserId: string) {
       .limit(1);
 
     return { success: true, status, connectionId, following: followRows.length > 0 };
+    });
   } catch (error: any) {
     console.error("Error getting connection status:", error);
     return { success: false, status: "none" as const, following: false };
@@ -167,6 +178,7 @@ export async function getConnectionStatus(targetUserId: string) {
 
 export async function getMyNetwork(suggestionsLimit = 10, suggestionsCursor?: string) {
   try {
+    return await getCached(`getMyNetwork:${suggestionsLimit}:${suggestionsCursor || "nc"}`, [CACHE_TAGS.CONNECTIONS, CACHE_TAGS.FOLLOWS, CACHE_TAGS.USERS], async () => {
     const me = await getCurrentUser();
     if (!me) return { success: false, error: "Unauthorized" };
 
@@ -237,6 +249,7 @@ export async function getMyNetwork(suggestionsLimit = 10, suggestionsCursor?: st
       nextSuggestionsCursor,
       hasMoreSuggestions,
     };
+    });
   } catch (error: any) {
     console.error("Error loading network:", error);
     return { success: false, error: error.message || "Failed to load network" };

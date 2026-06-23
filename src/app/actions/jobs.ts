@@ -354,6 +354,7 @@ export async function updateJobPosting(jobId: string, formData: FormData) {
     };
 
     await db.update(jobPostings).set(jobUpdate).where(eq(jobPostings.id, jobId));
+    invalidateCache(CACHE_TAGS.JOBS);
     return {
       success: true,
       job: { ...existingJob, ...jobUpdate, skills, requirements, benefits },

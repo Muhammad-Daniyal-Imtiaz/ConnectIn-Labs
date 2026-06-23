@@ -5,9 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { freelanceProjects, users, profiles, freelanceSubmissions } from "@/db/schema";
 import { eq, desc, and, lt } from "drizzle-orm";
+import { getCached, invalidateCache } from "@/lib/cache";
+import { CACHE_TAGS, TTL } from "@/lib/cache-tags";
 
 export async function getFreelanceProjects(limit = 10, cursor?: string) {
   try {
+    return await getCached(`getFreelanceProjects:${limit}:${cursor || "nc"}`, CACHE_TAGS.FREELANCE, async () => {
     const whereClause = cursor ? lt(freelanceProjects.createdAt, cursor) : undefined;
 
     const list = await db
@@ -69,6 +72,7 @@ export async function getFreelanceProjects(limit = 10, cursor?: string) {
     });
 
     return { success: true, projects: formattedProjects, nextCursor, hasMore };
+    });
   } catch (error) {
     console.error("Error loading freelance projects:", error);
     return { success: false, error: "Failed to load freelance projects from database." };
@@ -136,6 +140,7 @@ export async function createFreelanceProject(formData: FormData) {
     };
 
     await db.insert(freelanceProjects).values(newProject);
+    invalidateCache(CACHE_TAGS.FREELANCE);
     return { 
       success: true, 
       project: { 
@@ -194,6 +199,7 @@ export async function submitFreelanceProposal(projectId: string, formData: FormD
     };
 
     await db.insert(freelanceSubmissions).values(submission);
+    invalidateCache(CACHE_TAGS.FREELANCE, CACHE_TAGS.FREELANCE_SUBMISSIONS);
 
     return { success: true, submission };
   } catch (err: any) {

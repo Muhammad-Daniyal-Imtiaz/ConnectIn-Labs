@@ -5,9 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { mvps, users, profiles } from "@/db/schema";
 import { eq, desc, lt } from "drizzle-orm";
+import { getCached, invalidateCache } from "@/lib/cache";
+import { CACHE_TAGS, TTL } from "@/lib/cache-tags";
 
 export async function getMvps(limit = 10, cursor?: string) {
   try {
+    return await getCached(`getMvps:${limit}:${cursor || "nc"}`, CACHE_TAGS.MVPS, async () => {
     const whereClause = cursor ? lt(mvps.createdAt, cursor) : undefined;
 
     const list = await db
@@ -35,6 +38,7 @@ export async function getMvps(limit = 10, cursor?: string) {
     });
 
     return { success: true, mvps: formattedMvps, nextCursor, hasMore };
+  });
   } catch (error) {
     console.error("Error loading mvps:", error);
     return { success: false, error: "Failed to load mvps from database." };
@@ -107,6 +111,7 @@ export async function createMvp(formData: FormData) {
     };
 
     await db.insert(mvps).values(newMvp);
+    invalidateCache(CACHE_TAGS.MVPS);
     return { 
       success: true, 
       mvp: { 

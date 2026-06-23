@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { companyPages, users, jobPostings, jobApplications } from "@/db/schema";
 import { eq, desc, like, sql, and, lt } from "drizzle-orm";
+import { getCached, invalidateCache } from "@/lib/cache";
+import { CACHE_TAGS, TTL } from "@/lib/cache-tags";
 
 function generateSlug(name: string): string {
   return name
@@ -78,6 +80,7 @@ export async function createCompanyPage(formData: FormData) {
     };
 
     await db.insert(companyPages).values(page);
+    invalidateCache(CACHE_TAGS.COMPANIES);
     return { success: true, slug, page: { ...page, specialties } };
   } catch (err: any) {
     console.error("createCompanyPage error:", err);
@@ -87,6 +90,7 @@ export async function createCompanyPage(formData: FormData) {
 
 export async function getCompanyPageBySlug(slug: string) {
   try {
+    return await getCached(`getCompanyPageBySlug:${slug}`, CACHE_TAGS.COMPANIES, async () => {
     const rows = await db
       .select({ page: companyPages, owner: users })
       .from(companyPages)
@@ -106,6 +110,7 @@ export async function getCompanyPageBySlug(slug: string) {
         ownerAvatar: owner?.avatarUrl,
       },
     };
+    });
   } catch (err: any) {
     return { success: false, error: err.message };
   }
@@ -166,6 +171,7 @@ export async function getMyCompanyPages() {
 
 export async function getAllCompanyPages(limit = 10, cursor?: string) {
   try {
+    return await getCached(`getAllCompanyPages:${limit}:${cursor || "nc"}`, CACHE_TAGS.COMPANIES, async () => {
     const whereClause = cursor ? lt(companyPages.createdAt, cursor) : undefined;
 
     const rows = await db
@@ -188,6 +194,7 @@ export async function getAllCompanyPages(limit = 10, cursor?: string) {
       nextCursor,
       hasMore,
     };
+    });
   } catch (err: any) {
     return { success: false, pages: [], error: err.message };
   }
@@ -265,6 +272,7 @@ export async function updateCompanyPage(formData: FormData) {
       })
       .where(eq(companyPages.id, pageId));
 
+    invalidateCache(CACHE_TAGS.COMPANIES);
     return { success: true, slug, page: existing[0] };
   } catch (err: any) {
     console.error("updateCompanyPage error:", err);

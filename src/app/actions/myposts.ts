@@ -5,6 +5,8 @@ import { getServerSession } from "next-auth/next";
 import { db } from "@/db";
 import { and, desc, eq } from "drizzle-orm";
 import { posts, profiles, users } from "@/db/schema";
+import { getCached, invalidateCache } from "@/lib/cache";
+import { CACHE_TAGS, TTL } from "@/lib/cache-tags";
 
 // Get current user's posts
 export async function getUserPosts() {
@@ -18,26 +20,28 @@ export async function getUserPosts() {
     return { success: false, error: "User not found" };
   }
   const userId = dbUser[0].id;
-  const list = await db
-    .select({
-      post: posts,
-      profile: profiles,
-      user: users,
-    })
-    .from(posts)
-    .leftJoin(profiles, eq(posts.userId, profiles.userId))
-    .leftJoin(users, eq(posts.userId, users.id))
-    .where(eq(posts.userId, userId))
-    .orderBy(desc(posts.createdAt));
+  return await getCached(`getUserPosts:${userId}`, CACHE_TAGS.POSTS, async () => {
+    const list = await db
+      .select({
+        post: posts,
+        profile: profiles,
+        user: users,
+      })
+      .from(posts)
+      .leftJoin(profiles, eq(posts.userId, profiles.userId))
+      .leftJoin(users, eq(posts.userId, users.id))
+      .where(eq(posts.userId, userId))
+      .orderBy(desc(posts.createdAt));
 
-  const userPosts = list.map(({ post, profile, user }) => ({
-    ...post,
-    contactEmail: post.showContactEmail ? user?.email : null,
-    contactPhone: post.showContactPhone ? profile?.phone : null,
-    contactCountry: post.showContactCountry ? profile?.country : null,
-  }));
+    const userPosts = list.map(({ post, profile, user }) => ({
+      ...post,
+      contactEmail: post.showContactEmail ? user?.email : null,
+      contactPhone: post.showContactPhone ? profile?.phone : null,
+      contactCountry: post.showContactCountry ? profile?.country : null,
+    }));
 
-  return { success: true, posts: userPosts };
+    return { success: true, posts: userPosts };
+  });
 }
 
 // Update a post (all fields editable)
@@ -100,6 +104,7 @@ export async function updatePost(formData: FormData) {
         updatedAt: new Date().toISOString(),
       })
       .where(and(eq(posts.id, postId), eq(posts.userId, userId)));
+    invalidateCache(CACHE_TAGS.POSTS);
 
     const updated = await db
       .select({
@@ -155,6 +160,7 @@ export async function deletePost(formData: FormData) {
 
     const userId = dbUser[0].id;
     await db.delete(posts).where(and(eq(posts.id, postId), eq(posts.userId, userId)));
+    invalidateCache(CACHE_TAGS.POSTS);
     return { success: true };
   } catch (error) {
     console.error("Error deleting post:", error);
