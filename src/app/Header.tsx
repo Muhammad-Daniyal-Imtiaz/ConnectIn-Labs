@@ -365,6 +365,15 @@ export default function Header() {
               >
                 <span>My Posts</span>
               </Link>
+              {["daniyalimtiaz041@gmail.com", "indusfoundryventures@gmail.com"].includes(effectiveUser?.email?.toLowerCase().trim() || "") && (
+                <Link
+                  href="/admin/dashboard"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-[10px] font-bold transition-all cursor-pointer"
+                  style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)" }}
+                >
+                  Admin Panel
+                </Link>
+              )}
               
               {/* User Avatar & Logout */}
               <div className="flex items-center gap-3 relative shrink-0">
